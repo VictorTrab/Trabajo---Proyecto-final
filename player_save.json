@@ -1,0 +1,48 @@
+{
+    "name": "Jugador",
+    "levels_completed": {
+        "1": {
+            "F\u00e1cil": true,
+            "Medio": false,
+            "Dif\u00edcil": false
+        },
+        "2": {
+            "F\u00e1cil": true,
+            "Medio": false,
+            "Dif\u00edcil": false
+        },
+        "3": {
+            "F\u00e1cil": true,
+            "Medio": false,
+            "Dif\u00edcil": false
+        }
+    },
+    "best_scores": {
+        "1": {
+            "F\u00e1cil": {
+                "moves": 2,
+                "time": 3.0696442127227783
+            },
+            "Medio": null,
+            "Dif\u00edcil": null
+        },
+        "2": {
+            "F\u00e1cil": {
+                "moves": 2,
+                "time": 5.253131866455078
+            },
+            "Medio": null,
+            "Dif\u00edcil": null
+        },
+        "3": {
+            "F\u00e1cil": {
+                "moves": 3,
+                "time": 3.9004247188568115
+            },
+            "Medio": null,
+            "Dif\u00edcil": null
+        }
+    },
+    "total_levels_completed": 3,
+    "unlocked_levels": 4
+}

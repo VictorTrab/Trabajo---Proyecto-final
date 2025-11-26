@@ -1,0 +1,22 @@
+{
+    "id": 1,
+    "shape_type": "triangle",
+    "grid_pattern": "square",
+    "difficulties": {
+        "Fácil": {
+            "target_position": [600, 400],
+            "target_rotation": 0,
+            "target_scale": 1.0
+        },
+        "Medio": {
+            "target_position": [650, 380],
+            "target_rotation": 60,
+            "target_scale": 1.1
+        },
+        "Difícil": {
+            "target_position": [700, 420],
+            "target_rotation": 120,
+            "target_scale": 0.9
+        }
+    }
+}

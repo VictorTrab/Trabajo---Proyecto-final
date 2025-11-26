@@ -1,0 +1,22 @@
+{
+    "id": 3,
+    "shape_type": "star",
+    "grid_pattern": "triangular",
+    "difficulties": {
+        "Fácil": {
+            "target_position": [600, 400],
+            "target_rotation": 0,
+            "target_scale": 1.0
+        },
+        "Medio": {
+            "target_position": [680, 370],
+            "target_rotation": 36,
+            "target_scale": 1.2
+        },
+        "Difícil": {
+            "target_position": [550, 430],
+            "target_rotation": 72,
+            "target_scale": 0.8
+        }
+    }
+}
