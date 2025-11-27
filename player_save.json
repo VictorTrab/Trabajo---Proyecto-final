@@ -2,50 +2,39 @@
     "name": "Jugador",
     "levels_completed": {
         "1": {
-            "F\u00e1cil": true,
-            "Medio": true,
+            "F\u00e1cil": false,
+            "Medio": false,
             "Dif\u00edcil": false
         },
         "2": {
-            "F\u00e1cil": true,
+            "F\u00e1cil": false,
             "Medio": false,
             "Dif\u00edcil": false
         },
         "3": {
-            "F\u00e1cil": true,
+            "F\u00e1cil": false,
             "Medio": false,
             "Dif\u00edcil": false
         }
     },
     "best_scores": {
         "1": {
-            "F\u00e1cil": {
-                "moves": 2,
-                "time": 3.0696442127227783
-            },
-            "Medio": {
-                "moves": 9,
-                "time": 10.868200302124023
-            },
+            "F\u00e1cil": null,
+            "Medio": null,
             "Dif\u00edcil": null
         },
         "2": {
-            "F\u00e1cil": {
-                "moves": 2,
-                "time": 5.253131866455078
-            },
+            "F\u00e1cil": null,
             "Medio": null,
             "Dif\u00edcil": null
         },
         "3": {
-            "F\u00e1cil": {
-                "moves": 3,
-                "time": 3.9004247188568115
-            },
+            "F\u00e1cil": null,
             "Medio": null,
             "Dif\u00edcil": null
         }
     },
-    "total_levels_completed": 4,
-    "unlocked_levels": 4
+    "total_levels_completed": 0,
+    "unlocked_levels": 1,
+    "global_moves": 50
 }

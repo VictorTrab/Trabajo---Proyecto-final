@@ -6,6 +6,7 @@ import numpy as np
 import json
 import os
 from constantes import *
+from entidades_juego import ObstacleZone, DistortionZone, GravityZone
 
 
 class Level:
@@ -20,6 +21,7 @@ class Level:
         target_rotation,
         target_scale,
         grid_pattern,
+        zones_data=None,  # Nuevo parámetro para zonas
     ):
         self.level_number = level_number
         self.difficulty = difficulty  # 'Facil', 'Medio', 'Dificil'
@@ -30,6 +32,37 @@ class Level:
         self.max_moves = MOVES_BY_DIFFICULTY[difficulty]
         self.time_limit = TIME_BY_DIFFICULTY[difficulty]
         self.grid_pattern = grid_pattern  # patron del teselado
+
+        # Inicializar zonas
+        self.zones = []
+        if zones_data:
+            self._load_zones(zones_data)
+        else:
+            # Zonas por defecto para probar mecánicas si no hay datos en JSON
+            self._add_default_zones_for_testing()
+
+    def _load_zones(self, zones_data):
+        """Carga zonas desde datos (JSON)"""
+        for z in zones_data:
+            t = z.get("type")
+            rect = z.get("rect")  # [x, y, w, h]
+            if t == "obstacle":
+                self.zones.append(ObstacleZone(*rect))
+            elif t == "distortion":
+                self.zones.append(DistortionZone(*rect))
+            elif t == "gravity":
+                force = z.get("force", [0, 0])
+                self.zones.append(GravityZone(*rect, force))
+
+    def _add_default_zones_for_testing(self):
+        """Añade zonas de prueba según dificultad para demostrar mecánicas"""
+        if self.difficulty == "Medio":
+            # Añadir una zona de distorsión en el camino
+            self.zones.append(DistortionZone(100, 100, 150, 150))
+        elif self.difficulty == "Difícil":
+            # Añadir obstáculos y gravedad
+            self.zones.append(ObstacleZone(500, 200, 100, 100))
+            self.zones.append(GravityZone(800, 500, 200, 100, [-0.5, 0]))
 
     def get_shape_vertices(self):
         """Retorna los vertices de la forma segun el tipo"""
@@ -94,6 +127,7 @@ def get_level(level_number, difficulty):
             target_rotation=diff_data["target_rotation"],
             target_scale=diff_data["target_scale"],
             grid_pattern=data["grid_pattern"],
+            zones_data=data.get("zones", []),  # Pasar datos de zonas si existen en JSON
         )
 
         _LEVEL_CACHE[cache_key] = level

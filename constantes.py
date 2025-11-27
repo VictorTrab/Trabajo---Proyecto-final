@@ -72,3 +72,20 @@ GAME_AUTHORS = "V.H & R."
 GAME_LICENSE = "Uso Educativo"
 GAME_YEAR = "2025"
 GAME_PURPOSE = "Proyecto de informatica grafica"
+
+# --- NUEVAS CONSTANTES PARA MECÁNICAS AVANZADAS ---
+
+# Colores de Feedback
+COLOR_SUCCESS_GLOW = (50, 255, 50)  # Verde éxito
+COLOR_DANGER = (255, 50, 50)  # Rojo peligro
+COLOR_WARNING = (255, 165, 0)  # Naranja advertencia
+
+# Tipos de Zonas
+ZONE_TYPE_OBSTACLE = "obstacle"  # Zona prohibida (muerte o bloqueo)
+ZONE_TYPE_DISTORTION = "distortion"  # Altera escala/rotación
+ZONE_TYPE_GRAVITY = "gravity"  # Arrastra la figura
+
+# Configuración de Feedback Visual
+SHAKE_DECAY = 0.9  # Cuánto disminuye el temblor por frame
+MAX_SHAKE = 10.0  # Máximo desplazamiento en píxeles
+PROXIMITY_THRESHOLD = 50.0  # Distancia para empezar a brillar verde

@@ -8,6 +8,7 @@ import time
 from constantes import *
 from sistema_niveles import get_level
 from sistema_particulas import ParticleSystem, MovementTrailEffect
+from entidades_juego import ZONE_TYPE_OBSTACLE, ZONE_TYPE_DISTORTION, ZONE_TYPE_GRAVITY
 
 
 class Game:
@@ -27,6 +28,12 @@ class Game:
         self.rotation = 0.0
         self.scale = 1.0
 
+        # Estado de feedback visual
+        self.shake_intensity = 0.0
+        self.stress_level = 0.0  # 0.0 a 1.0, indica qué tan "forzada" está la figura
+        self.in_distortion = False
+        self.proximity_factor = 0.0  # 0.0 (lejos) a 1.0 (encaje perfecto)
+
         # Contador de movimientos
         self.moves_count = 0
         self.moves_remaining = self.player.global_moves
@@ -40,7 +47,7 @@ class Game:
         # Estado del juego
         self.completed = False
         self.failed = False
-        self.fail_reason = ""  # "time" o "moves"
+        self.fail_reason = ""  # "time", "moves", "obstacle"
 
         # Animación de respiración
         self.breathe_offset = 0
@@ -144,23 +151,58 @@ class Game:
 
     def draw_shape(self, vertices, position, rotation, scale, color, width=0):
         """Dibuja una forma con las transformaciones aplicadas y efecto 3D"""
-        transformed = self.transform_shape(vertices, position, rotation, scale)
+
+        # Aplicar "Shake" (temblor) a la posición visual si hay intensidad
+        visual_pos = list(position)
+        if self.shake_intensity > 0.1:
+            offset_x = (np.random.random() - 0.5) * self.shake_intensity
+            offset_y = (np.random.random() - 0.5) * self.shake_intensity
+            visual_pos[0] += offset_x
+            visual_pos[1] += offset_y
+
+        transformed = self.transform_shape(vertices, visual_pos, rotation, scale)
         points = [(int(p[0]), int(p[1])) for p in transformed]
 
         if width == 0:  # Forma rellena con profundidad
+            # Modificar color basado en estrés o proximidad
+            draw_color = list(color)
+
+            # Si hay mucho estrés (rotación rápida/distorsión), mezclar con rojo/naranja
+            if self.stress_level > 0.1:
+                factor = min(1.0, self.stress_level)
+                # Mezclar hacia COLOR_WARNING
+                for i in range(3):
+                    draw_color[i] = int(
+                        draw_color[i] * (1 - factor) + COLOR_WARNING[i] * factor
+                    )
+
+            # Si está muy cerca del objetivo, mezclar con verde brillante
+            if self.proximity_factor > 0.5:
+                factor = (self.proximity_factor - 0.5) * 2  # 0 a 1
+                for i in range(3):
+                    draw_color[i] = int(
+                        draw_color[i] * (1 - factor) + COLOR_SUCCESS_GLOW[i] * factor
+                    )
+
+            draw_color = tuple(draw_color)
+
             # Dibujar capas de sombra para efecto 3D
             for layer in range(GLOW_LAYERS, 0, -1):
                 offset = layer * 3
                 shadow_points = [(p[0] + offset, p[1] + offset) for p in points]
-                shadow_color = tuple(int(c * 0.2 * layer / GLOW_LAYERS) for c in color)
+                shadow_color = tuple(
+                    int(c * 0.2 * layer / GLOW_LAYERS) for c in draw_color
+                )
                 pygame.draw.polygon(self.screen, shadow_color, shadow_points)
 
             # Forma principal
-            pygame.draw.polygon(self.screen, color, points)
+            pygame.draw.polygon(self.screen, draw_color, points)
 
             # Borde brillante neón
             for glow in range(GLOW_LAYERS):
-                glow_color = tuple(min(255, int(c * (1 + glow * 0.3))) for c in color)
+                glow_color = tuple(
+                    min(255, int(c * (1 + glow * 0.3))) for c in draw_color
+                )
                 pygame.draw.polygon(self.screen, glow_color, points, GLOW_LAYERS - glow)
         else:
             # Solo contorno con glow
@@ -179,6 +221,11 @@ class Game:
             NEON_GREEN,
             width=3,
         )
+
+        # Dibujar zonas del nivel (obstáculos, distorsiones, etc.)
+        if hasattr(self.level, "zones"):
+            for zone in self.level.zones:
+                zone.draw(self.screen)
 
     def draw_player_shape(self):
         """Dibuja la forma del jugador con efecto 3D"""
@@ -325,20 +372,26 @@ class Game:
                 self.rotation -= ROTATION_SPEED
                 moved = True
                 transform_type = "rotation"
+                self.shake_intensity = min(MAX_SHAKE, self.shake_intensity + 0.5)
+                self.stress_level = min(1.0, self.stress_level + 0.1)
             if keys[pygame.K_e]:
                 self.rotation += ROTATION_SPEED
                 moved = True
                 transform_type = "rotation"
+                self.shake_intensity = min(MAX_SHAKE, self.shake_intensity + 0.5)
+                self.stress_level = min(1.0, self.stress_level + 0.1)
 
             # Escala (Teclas)
             if keys[pygame.K_z]:
                 self.scale = max(0.1, self.scale - SCALE_SPEED)
                 moved = True
                 transform_type = "scale"
+                self.stress_level = min(1.0, self.stress_level + 0.05)
             if keys[pygame.K_x]:
                 self.scale = min(3.0, self.scale + SCALE_SPEED)
                 moved = True
                 transform_type = "scale"
+                self.stress_level = min(1.0, self.stress_level + 0.05)
 
         # Contar movimiento solo si cambió el tipo de transformación
         if moved and transform_type != self.last_transform:
@@ -360,6 +413,26 @@ class Game:
 
     def check_completion(self):
         """Verifica si la forma está correctamente encajada"""
+        # Verificar si está en zona prohibida (obstáculo)
+        if hasattr(self.level, "zones"):
+            current_vertices = self.transform_shape(
+                self.shape_vertices, self.position, self.rotation, self.scale
+            )
+            for zone in self.level.zones:
+                if zone.type == ZONE_TYPE_OBSTACLE and zone.check_collision_polygon(
+                    current_vertices
+                ):
+                    # No se puede completar si se toca un obstáculo
+                    # Feedback visual de error
+                    self.particle_system.emit_burst(
+                        self.position[0],
+                        self.position[1],
+                        COLOR_DANGER,
+                        count=10,
+                        spread=5.0,
+                    )
+                    return False
+
         # Verificar posición
         pos_diff = np.linalg.norm(
             np.array(self.position) - np.array(self.level.target_position)
@@ -391,6 +464,40 @@ class Game:
         # Actualizar animación de respiración
         self.breathe_offset += BREATHE_SPEED
 
+        # Actualizar zonas y aplicar efectos
+        self.in_distortion = False
+        if hasattr(self.level, "zones"):
+            # Calcular vértices actuales para colisiones precisas
+            current_vertices = self.transform_shape(
+                self.shape_vertices, self.position, self.rotation, self.scale
+            )
+
+            for zone in self.level.zones:
+                zone.update()
+                # Verificar colisión con la zona
+                if zone.check_collision_polygon(current_vertices):
+                    effect_result = zone.apply_effect(self)
+
+                    # Si es un obstáculo mortal
+                    if zone.type == ZONE_TYPE_OBSTACLE and effect_result:
+                        self.failed = True
+                        self.fail_reason = "obstacle"
+                        # Efecto de destrucción
+                        self.particle_system.emit_burst(
+                            self.position[0],
+                            self.position[1],
+                            COLOR_DANGER,
+                            count=20,
+                            spread=8.0,
+                        )
+
+        # Decaer efectos visuales (shake, stress)
+        self.shake_intensity = max(0, self.shake_intensity * SHAKE_DECAY)
+        self.stress_level = max(0, self.stress_level - 0.05)
+
+        # Calcular proximidad para feedback visual
+        self._calculate_proximity()
+
         # Actualizar temporizador
         if not self.completed and not self.failed:
             elapsed = time.time() - self.start_time
@@ -405,6 +512,10 @@ class Game:
         last_pos = np.array(self.last_particle_pos)
         if np.linalg.norm(current_pos - last_pos) > 0.5:
             color = NEON_CYAN if not self.completed else NEON_YELLOW
+            # Cambiar color del rastro si hay distorsión o peligro
+            if self.in_distortion:
+                color = NEON_PURPLE
+
             self.trail_effect.update_position(self.position[0], self.position[1], color)
             self.last_particle_pos = self.position.copy()
 
@@ -433,3 +544,21 @@ class Game:
                 )
 
         return self.completed or self.failed
+
+    def _calculate_proximity(self):
+        """Calcula qué tan cerca está el jugador de la solución para feedback visual"""
+        pos_diff = np.linalg.norm(
+            np.array(self.position) - np.array(self.level.target_position)
+        )
+        rot_diff = abs((self.rotation % 360) - (self.level.target_rotation % 360))
+        rot_diff = min(rot_diff, 360 - rot_diff)
+        scale_diff = abs(self.scale - self.level.target_scale)
+
+        # Normalizar diferencias a un valor 0-1 (1 es muy cerca)
+        # Asumimos rangos máximos razonables para la normalización
+        p_score = max(0, 1 - pos_diff / 200)
+        r_score = max(0, 1 - rot_diff / 45)
+        s_score = max(0, 1 - scale_diff / 0.5)
+
+        # Promedio ponderado
+        self.proximity_factor = p_score * 0.4 + r_score * 0.3 + s_score * 0.3
