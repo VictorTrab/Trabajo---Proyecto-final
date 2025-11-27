@@ -29,7 +29,7 @@ class Game:
 
         # Contador de movimientos
         self.moves_count = 0
-        self.moves_remaining = self.level.max_moves
+        self.moves_remaining = self.player.global_moves
         self.last_transform = None
 
         # Temporizador
@@ -206,9 +206,9 @@ class Game:
         self.screen.blit(level_text, (20, 20))
 
         # Movimientos
-        moves_color = NEON_ORANGE if self.moves_remaining < 3 else NEON_CYAN
+        moves_color = NEON_ORANGE if self.moves_remaining < 5 else NEON_CYAN
         moves_text = self.font.render(
-            f"MOVIMIENTOS: {self.moves_remaining}/{self.level.max_moves}",
+            f"MOVIMIENTOS: {self.moves_remaining}",
             True,
             moves_color,
         )
@@ -227,7 +227,7 @@ class Game:
         instructions = [
             "WASD: MOVER",
             "Q/E: ROTAR",
-            "Z/X: ESCALAR",
+            "RUEDA/ZX: ESCALAR",
             "ESPACIO: VERIFICAR",
             "ESC: SALIR",
         ]
@@ -281,7 +281,7 @@ class Game:
             retry_rect = retry.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
             self.screen.blit(retry, retry_rect)
 
-    def handle_input(self, keys):
+    def handle_input(self, keys, event=None):
         """Maneja la entrada del jugador"""
         if self.completed or self.failed:
             return
@@ -289,48 +289,62 @@ class Game:
         moved = False
         transform_type = None
 
-        # Traslación
-        if keys[pygame.K_w]:
-            self.position[1] -= TRANSLATION_SPEED
-            moved = True
-            transform_type = "translation"
-        if keys[pygame.K_s]:
-            self.position[1] += TRANSLATION_SPEED
-            moved = True
-            transform_type = "translation"
-        if keys[pygame.K_a]:
-            self.position[0] -= TRANSLATION_SPEED
-            moved = True
-            transform_type = "translation"
-        if keys[pygame.K_d]:
-            self.position[0] += TRANSLATION_SPEED
-            moved = True
-            transform_type = "translation"
+        # Manejo de eventos discretos (Rueda del mouse)
+        if event and event.type == pygame.MOUSEWHEEL:
+            scale_factor = SCALE_SPEED * 2  # Doble velocidad para la rueda
+            if event.y > 0:  # Scroll arriba -> Agrandar
+                self.scale = min(3.0, self.scale + scale_factor)
+                moved = True
+                transform_type = "scale"
+            elif event.y < 0:  # Scroll abajo -> Achicar
+                self.scale = max(0.1, self.scale - scale_factor)
+                moved = True
+                transform_type = "scale"
 
-        # Rotación
-        if keys[pygame.K_q]:
-            self.rotation -= ROTATION_SPEED
-            moved = True
-            transform_type = "rotation"
-        if keys[pygame.K_e]:
-            self.rotation += ROTATION_SPEED
-            moved = True
-            transform_type = "rotation"
+        if keys:
+            # Traslación
+            if keys[pygame.K_w]:
+                self.position[1] -= TRANSLATION_SPEED
+                moved = True
+                transform_type = "translation"
+            if keys[pygame.K_s]:
+                self.position[1] += TRANSLATION_SPEED
+                moved = True
+                transform_type = "translation"
+            if keys[pygame.K_a]:
+                self.position[0] -= TRANSLATION_SPEED
+                moved = True
+                transform_type = "translation"
+            if keys[pygame.K_d]:
+                self.position[0] += TRANSLATION_SPEED
+                moved = True
+                transform_type = "translation"
 
-        # Escala
-        if keys[pygame.K_z]:
-            self.scale = max(0.1, self.scale - SCALE_SPEED)
-            moved = True
-            transform_type = "scale"
-        if keys[pygame.K_x]:
-            self.scale = min(3.0, self.scale + SCALE_SPEED)
-            moved = True
-            transform_type = "scale"
+            # Rotación
+            if keys[pygame.K_q]:
+                self.rotation -= ROTATION_SPEED
+                moved = True
+                transform_type = "rotation"
+            if keys[pygame.K_e]:
+                self.rotation += ROTATION_SPEED
+                moved = True
+                transform_type = "rotation"
+
+            # Escala (Teclas)
+            if keys[pygame.K_z]:
+                self.scale = max(0.1, self.scale - SCALE_SPEED)
+                moved = True
+                transform_type = "scale"
+            if keys[pygame.K_x]:
+                self.scale = min(3.0, self.scale + SCALE_SPEED)
+                moved = True
+                transform_type = "scale"
 
         # Contar movimiento solo si cambió el tipo de transformación
         if moved and transform_type != self.last_transform:
             self.moves_count += 1
-            self.moves_remaining -= 1
+            self.player.global_moves -= 1
+            self.moves_remaining = self.player.global_moves
             self.last_transform = transform_type
 
             # Emitir efecto de contacto al cambiar tipo de transformación
@@ -338,7 +352,7 @@ class Game:
                 self.position[0], self.position[1], NEON_CYAN
             )
 
-            if self.moves_remaining <= 0:
+            if self.player.global_moves <= 0:
                 self.failed = True
                 self.fail_reason = "moves"
         elif not moved:

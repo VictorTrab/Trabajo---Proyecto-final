@@ -103,15 +103,25 @@ graph TD
 
 ### 3. Lógica del Juego (Morado - `logica_juego.py`)
 
-- **Game:** Contiene la lógica central del puzzle: transformaciones geométricas, detección de colisiones y condiciones de victoria.
+- **Game:** Contiene la lógica central del puzzle: transformaciones geométricas (incluyendo soporte para rueda del mouse), detección de colisiones, gestión de movimientos globales y condiciones de victoria.
 - **Sistema de Partículas (`sistema_particulas.py`):** Maneja los efectos visuales de forma independiente.
 - **Sistema de Menú (`sistema_menu.py`):** Maneja la lógica visual y de navegación de los menús.
 
 ### 4. Datos y Persistencia (Verde)
 
 - **Sistema de Niveles (`sistema_niveles.py`):** Carga la configuración de los niveles desde archivos `.json` externos, permitiendo modificar el diseño sin tocar código.
-- **Jugador (`jugador.py`):** Gestiona la persistencia de datos (guardado/carga de progreso y puntuaciones).
+- **Jugador (`jugador.py`):** Gestiona la persistencia de datos (guardado/carga de progreso, puntuaciones y reserva global de movimientos). Implementa la lógica de reinicio de progreso (Roguelike) al agotar recursos.
 - **Gestor de Recursos (`gestor_recursos.py`):** Centraliza la carga de assets (fuentes, imágenes) para optimizar el rendimiento.
+
+### 5. Mecánicas de Juego y Economía
+
+El juego ha evolucionado hacia un sistema de gestión de recursos tipo Arcade/Roguelike:
+
+- **Movimientos Globales:** A diferencia de los límites por nivel tradicionales, el jugador posee una reserva global de movimientos (`INITIAL_GLOBAL_MOVES`).
+- **Consumo y Recompensa:**
+  - Cada acción consume 1 movimiento de la reserva global.
+  - Al completar un nivel, se recuperan los movimientos gastados y se otorga una bonificación basada en la dificultad (`MOVES_REWARD`).
+- **Condición de Derrota Global:** Si la reserva de movimientos llega a 0, se reinicia todo el progreso del jugador (niveles desbloqueados y puntuaciones), regresando al estado inicial.
 
 ## Flujo de Datos Típico
 

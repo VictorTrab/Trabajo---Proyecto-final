@@ -99,6 +99,9 @@ class PlayingState(GameState):
     """Estado de juego activo"""
 
     def handle_input(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            self.manager.current_game.handle_input(None, event)
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.manager.change_state("difficulty_select")
@@ -117,17 +120,22 @@ class PlayingState(GameState):
         game_ended = self.manager.current_game.update()
         if game_ended:
             # Logica de fin de juego (espera y transicion)
-            # Nota: Para simplificar, manejamos la espera aqui o pasamos a un estado de 'resultado'
-            # Por ahora, mantenemos la logica original simplificada
             if self.manager.current_game.failed:
-                # Reiniciar
-                difficulty = DIFFICULTIES[self.manager.menu.selected_difficulty]
-                self.manager.current_game = Game(
-                    self.manager.screen,
-                    self.manager.selected_level,
-                    difficulty,
-                    self.manager.player,
-                )
+                if self.manager.current_game.fail_reason == "moves":
+                    # Game Over por movimientos - Reiniciar progreso
+                    self.manager.player.reset_progress()
+                    self.manager.player.save()
+                    self.manager.change_state("main_menu")
+                    self.manager.menu.selected_option = 0
+                else:
+                    # Reiniciar nivel (por tiempo u otra razón)
+                    difficulty = DIFFICULTIES[self.manager.menu.selected_difficulty]
+                    self.manager.current_game = Game(
+                        self.manager.screen,
+                        self.manager.selected_level,
+                        difficulty,
+                        self.manager.player,
+                    )
             else:
                 # Completado
                 self.manager.transition_data = {

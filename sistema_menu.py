@@ -211,7 +211,7 @@ class Menu:
         self.menu_option_time += 0.2
 
         # Título con efecto 3D Pulse Scale Animation
-        self.draw_3d_pulse_title("NEONFIT", 240, NEON_PINK, (SCREEN_WIDTH // 2, 150))
+        self.draw_3d_pulse_title("NEONFITS", 240, NEON_PINK, (SCREEN_WIDTH // 2, 150))
 
         # Opciones del menú
         options = ["Jugar", "Niveles", "Perfil", "Acerca de", "Salir"]

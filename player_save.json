@@ -3,7 +3,7 @@
     "levels_completed": {
         "1": {
             "F\u00e1cil": true,
-            "Medio": false,
+            "Medio": true,
             "Dif\u00edcil": false
         },
         "2": {
@@ -23,7 +23,10 @@
                 "moves": 2,
                 "time": 3.0696442127227783
             },
-            "Medio": null,
+            "Medio": {
+                "moves": 9,
+                "time": 10.868200302124023
+            },
             "Dif\u00edcil": null
         },
         "2": {
@@ -43,6 +46,6 @@
             "Dif\u00edcil": null
         }
     },
-    "total_levels_completed": 3,
+    "total_levels_completed": 4,
     "unlocked_levels": 4
 }

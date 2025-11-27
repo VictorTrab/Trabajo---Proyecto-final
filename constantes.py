@@ -30,8 +30,12 @@ TOTAL_LEVELS = 3
 # Dificultades
 DIFFICULTIES = ["Fácil", "Medio", "Difícil"]
 
-# Movimientos por dificultad
+# Movimientos por dificultad (Ya no se usa para inicialización, pero se mantiene por compatibilidad si es necesario)
 MOVES_BY_DIFFICULTY = {"Fácil": 10, "Medio": 22, "Difícil": 20}
+
+# Configuración de movimientos globales
+INITIAL_GLOBAL_MOVES = 50
+MOVES_REWARD = {"Fácil": 5, "Medio": 10, "Difícil": 15}
 
 # Tiempo límite por dificultad (en segundos)
 TIME_BY_DIFFICULTY = {
@@ -41,7 +45,7 @@ TIME_BY_DIFFICULTY = {
 }
 
 # Tolerancia para validar encaje (en píxeles)
-SNAP_TOLERANCE = 10
+SNAP_TOLERANCE = 20
 
 # Configuración de teselado
 TILE_SIZE = 40
@@ -67,4 +71,4 @@ GAME_VERSION = "1.0.0"
 GAME_AUTHORS = "V.H & R."
 GAME_LICENSE = "Uso Educativo"
 GAME_YEAR = "2025"
-GAME_PURPOSE = "Proyecto de práctica escolar"
+GAME_PURPOSE = "Proyecto de informatica grafica"

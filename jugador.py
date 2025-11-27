@@ -4,7 +4,13 @@ Sistema de jugador y gestión de guardado
 
 import json
 import os
-from constantes import SAVE_FILE, TOTAL_LEVELS, DIFFICULTIES
+from constantes import (
+    SAVE_FILE,
+    TOTAL_LEVELS,
+    DIFFICULTIES,
+    INITIAL_GLOBAL_MOVES,
+    MOVES_REWARD,
+)
 
 
 class Player:
@@ -23,6 +29,7 @@ class Player:
         }
         self.total_levels_completed = 0
         self.unlocked_levels = 1  # Solo el nivel 1 está desbloqueado al inicio
+        self.global_moves = INITIAL_GLOBAL_MOVES  # Movimientos globales para la partida
 
     def complete_level(self, level_number, difficulty, moves_used, time_used):
         """Marca un nivel como completado y actualiza estadísticas"""
@@ -46,6 +53,12 @@ class Player:
                         "moves": moves_used,
                         "time": time_used,
                     }
+
+            # Lógica de recompensa de movimientos:
+            # Recuperamos los movimientos usados (ya que se restaron en tiempo real)
+            # y añadimos la recompensa por dificultad.
+            reward = MOVES_REWARD.get(difficulty, 5)
+            self.global_moves += moves_used + reward
 
             # Desbloquear siguiente nivel si se completa cualquier dificultad
             if any(self.levels_completed[level_number].values()):
@@ -71,6 +84,7 @@ class Player:
         }
         self.total_levels_completed = 0
         self.unlocked_levels = 1
+        self.global_moves = INITIAL_GLOBAL_MOVES
 
     def get_completion_percentage(self):
         """Retorna el porcentaje de niveles completados"""
@@ -85,6 +99,7 @@ class Player:
             "best_scores": {str(k): v for k, v in self.best_scores.items()},
             "total_levels_completed": self.total_levels_completed,
             "unlocked_levels": self.unlocked_levels,
+            "global_moves": self.global_moves,
         }
 
         try:
@@ -124,6 +139,7 @@ class Player:
 
             player.total_levels_completed = data.get("total_levels_completed", 0)
             player.unlocked_levels = data.get("unlocked_levels", 1)
+            player.global_moves = data.get("global_moves", INITIAL_GLOBAL_MOVES)
 
             return player
         except Exception as e:
