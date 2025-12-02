@@ -64,7 +64,7 @@ GLOW_LAYERS = 3  # Número de capas para efecto glow
 SAVE_FILE = "config/player_save.json"
 
 # Información del juego
-GAME_VERSION = "1.0.0"
+GAME_VERSION = "3.6"
 GAME_AUTHORS = "V.H & R."
 GAME_LICENSE = "Uso Educativo"
 GAME_YEAR = "2025"
