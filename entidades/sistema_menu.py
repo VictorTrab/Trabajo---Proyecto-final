@@ -370,56 +370,289 @@ class Menu:
 
         # Título
         self.draw_text_with_glow(
-            "PERFIL", self.font_title, NEON_PINK, (SCREEN_WIDTH // 2, 100)
+            "PERFIL DE JUGADOR", self.font_title, NEON_PINK, (SCREEN_WIDTH // 2, 80)
         )
 
-        # Estadísticas
-        stats_y = 220
-        total_possible = TOTAL_LEVELS * len(DIFFICULTIES)
-        stats = [
-            f"Jugador: {player.name}",
-            f"Niveles completados: {player.total_levels_completed}/{total_possible}",
-            f"Progreso: {player.get_completion_percentage():.1f}%",
-            f"Niveles desbloqueados: {player.unlocked_levels}/{TOTAL_LEVELS}",
+        # Panel de información
+        panel_y = 180
+        panel_width = 800
+        panel_height = 480
+        panel_x = (SCREEN_WIDTH - panel_width) // 2
+
+        # Fondo del panel con transparencia
+        panel_surface = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
+        panel_surface.fill((20, 10, 40, 200))
+        pygame.draw.rect(panel_surface, NEON_CYAN, (0, 0, panel_width, panel_height), 2)
+        self.screen.blit(panel_surface, (panel_x, panel_y))
+
+        # Información del jugador
+        y_offset = panel_y + 30
+
+        # Nombre del jugador
+        name_text = self.font_menu.render(f"⚡ {player.name}", True, NEON_YELLOW)
+        name_rect = name_text.get_rect(center=(SCREEN_WIDTH // 2, y_offset))
+        self.screen.blit(name_text, name_rect)
+
+        y_offset += 70
+
+        # Estadísticas generales
+        stats_left_x = panel_x + 50
+        stats_right_x = panel_x + panel_width // 2 + 50
+
+        # Columna izquierda
+        left_stats = [
+            (
+                "Niveles completados:",
+                f"{player.total_levels_completed}/{TOTAL_LEVELS}",
+                NEON_CYAN,
+            ),
+            (
+                "Progreso total:",
+                f"{player.get_completion_percentage():.0f}%",
+                NEON_GREEN,
+            ),
+            (
+                "Niveles desbloqueados:",
+                f"{player.unlocked_levels}/{TOTAL_LEVELS}",
+                NEON_PURPLE,
+            ),
         ]
 
-        for i, stat in enumerate(stats):
-            text = self.font_menu.render(stat, True, NEON_CYAN)
-            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, stats_y + i * 70))
-            self.screen.blit(text, text_rect)
+        for i, (label, value, color) in enumerate(left_stats):
+            label_text = self.font_small.render(label, True, GRAY)
+            value_text = self.font_menu.render(value, True, color)
+            self.screen.blit(label_text, (stats_left_x, y_offset + i * 60))
+            self.screen.blit(value_text, (stats_left_x, y_offset + i * 60 + 25))
+
+        # Columna derecha - Mejores tiempos por nivel
+        best_times_title = self.font_small.render("Mejores Tiempos:", True, NEON_ORANGE)
+        self.screen.blit(best_times_title, (stats_right_x, y_offset))
+
+        for nivel in range(1, TOTAL_LEVELS + 1):
+            nivel_y = y_offset + 30 + (nivel - 1) * 50
+
+            if player.levels_completed.get(nivel, False):
+                # Nivel completado - mostrar tiempo
+                best_score = player.best_scores.get(nivel)
+                if best_score and isinstance(best_score, dict) and "time" in best_score:
+                    tiempo = best_score["time"]
+                    minutos = int(tiempo // 60)
+                    segundos = int(tiempo % 60)
+                    tiempo_str = f"{minutos}:{segundos:02d}"
+                    color = NEON_GREEN
+                    icono = "✓"
+                else:
+                    tiempo_str = "--:--"
+                    color = NEON_CYAN
+                    icono = "✓"
+            else:
+                # Nivel no completado
+                tiempo_str = (
+                    "Bloqueado" if nivel > player.unlocked_levels else "Sin completar"
+                )
+                color = GRAY
+                icono = "✗" if nivel > player.unlocked_levels else "○"
+
+            nivel_text = self.font_small.render(f"{icono} Nivel {nivel}:", True, color)
+            tiempo_text = self.font_small.render(tiempo_str, True, color)
+            self.screen.blit(nivel_text, (stats_right_x, nivel_y))
+            self.screen.blit(tiempo_text, (stats_right_x + 100, nivel_y))
+
+        # Barra de progreso
+        progress_y = panel_y + panel_height - 60
+        progress_width = panel_width - 100
+        progress_height = 30
+        progress_x = panel_x + 50
+
+        # Fondo de la barra
+        pygame.draw.rect(
+            self.screen,
+            (40, 20, 60),
+            (progress_x, progress_y, progress_width, progress_height),
+        )
+        pygame.draw.rect(
+            self.screen,
+            NEON_PURPLE,
+            (progress_x, progress_y, progress_width, progress_height),
+            2,
+        )
+
+        # Relleno de la barra
+        progress_fill = int(progress_width * (player.get_completion_percentage() / 100))
+        if progress_fill > 0:
+            pygame.draw.rect(
+                self.screen,
+                NEON_CYAN,
+                (progress_x, progress_y, progress_fill, progress_height),
+            )
+
+        # Texto de porcentaje
+        percent_text = self.font_small.render(
+            f"{player.get_completion_percentage():.0f}% Completado", True, WHITE
+        )
+        percent_rect = percent_text.get_rect(
+            center=(SCREEN_WIDTH // 2, progress_y + progress_height // 2)
+        )
+        self.screen.blit(percent_text, percent_rect)
+
+        # Opciones del perfil
+        options_y = 685
+        options = ["Volver", "Reiniciar Progreso"]
+
+        for i, option in enumerate(options):
+            is_selected = i == self.selected_option
+
+            if is_selected:
+                color = NEON_YELLOW if i == 0 else NEON_ORANGE
+                size = 35
+            else:
+                color = NEON_GREEN if i == 0 else NEON_PINK
+                size = 30
+
+            option_font = pygame.font.Font(None, size)
+            option_text = option_font.render(option, True, color)
+
+            x_pos = SCREEN_WIDTH // 2 - 200 if i == 0 else SCREEN_WIDTH // 2 + 200
+            option_rect = option_text.get_rect(center=(x_pos, options_y))
+
+            # Flecha de selección
+            if is_selected:
+                arrow = option_font.render("►", True, color)
+                arrow_rect = arrow.get_rect(center=(x_pos - 100, options_y))
+                self.screen.blit(arrow, arrow_rect)
+
+            self.screen.blit(option_text, option_rect)
 
         # Instrucciones
         instructions = self.font_small.render(
-            "Presiona ESC para volver", True, NEON_GREEN
+            "←→ Navegar | ENTER Seleccionar | ESC Volver", True, GRAY
         )
-        inst_rect = instructions.get_rect(center=(SCREEN_WIDTH // 2, 700))
+        inst_rect = instructions.get_rect(center=(SCREEN_WIDTH // 2, 720))
         self.screen.blit(instructions, inst_rect)
 
     def draw_about(self):
         """Dibuja la pantalla Acerca de"""
         self.draw_animated_background()
 
-        # Título
+        # Título principal
         self.draw_text_with_glow(
-            "ACERCA DE", self.font_title, NEON_PINK, (SCREEN_WIDTH // 2, 100)
+            "CUBO: ARQUITECTO DEL CAOS",
+            self.font_title,
+            NEON_CYAN,
+            (SCREEN_WIDTH // 2, 80),
         )
 
-        # Información del juego
-        info_y = 220
-        info_lines = [
-            ("CUBO: ARQUITECTO DEL CAOS", NEON_CYAN, self.font_menu),
-            (f"Versión {GAME_VERSION}", NEON_PURPLE, self.font_small),
-            (f"Autores: {GAME_AUTHORS}", NEON_GREEN, self.font_small),
-            (f"Año: {GAME_YEAR}", NEON_PURPLE, self.font_small),
-            (GAME_PURPOSE, NEON_CYAN, self.font_small),
-            (f"Licencia: {GAME_LICENSE}", NEON_PURPLE, self.font_small),
-            ("© 2025 Todos los derechos reservados", NEON_GREEN, self.font_small),
+        # Panel de información
+        panel_y = 160
+        panel_width = 900
+        panel_height = 500
+        panel_x = (SCREEN_WIDTH - panel_width) // 2
+
+        # Fondo del panel con transparencia
+        panel_surface = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
+        panel_surface.fill((20, 10, 40, 200))
+        pygame.draw.rect(
+            panel_surface, NEON_PURPLE, (0, 0, panel_width, panel_height), 2
+        )
+        self.screen.blit(panel_surface, (panel_x, panel_y))
+
+        # Información organizada en secciones
+        y_offset = panel_y + 30
+
+        # Versión del juego
+        version_text = self.font_menu.render(
+            f"Versión {GAME_VERSION}", True, NEON_YELLOW
+        )
+        version_rect = version_text.get_rect(center=(SCREEN_WIDTH // 2, y_offset))
+        self.screen.blit(version_text, version_rect)
+
+        y_offset += 60
+
+        # Línea separadora
+        pygame.draw.line(
+            self.screen,
+            NEON_CYAN,
+            (panel_x + 100, y_offset - 10),
+            (panel_x + panel_width - 100, y_offset - 10),
+            1,
+        )
+
+        # Información del proyecto
+        info_title = self.font_menu.render("INFORMACIÓN DEL PROYECTO", True, NEON_PINK)
+        info_title_rect = info_title.get_rect(center=(SCREEN_WIDTH // 2, y_offset + 10))
+        self.screen.blit(info_title, info_title_rect)
+
+        y_offset += 60
+
+        # Detalles del proyecto
+        project_details = [
+            ("Autores:", GAME_AUTHORS, NEON_GREEN),
+            ("Propósito:", GAME_PURPOSE, NEON_CYAN),
+            ("Año:", GAME_YEAR, NEON_PURPLE),
+            ("Licencia:", GAME_LICENSE, NEON_ORANGE),
         ]
 
-        for i, (line, color, font) in enumerate(info_lines):
-            text = font.render(line, True, color)
-            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, info_y + i * 55))
-            self.screen.blit(text, text_rect)
+        for label, value, color in project_details:
+            label_text = self.font_small.render(label, True, GRAY)
+            value_text = self.font_small.render(value, True, color)
+
+            label_rect = label_text.get_rect(center=(SCREEN_WIDTH // 2 - 150, y_offset))
+            value_rect = value_text.get_rect(center=(SCREEN_WIDTH // 2 + 100, y_offset))
+
+            self.screen.blit(label_text, label_rect)
+            self.screen.blit(value_text, value_rect)
+
+            y_offset += 40
+
+        y_offset += 20
+
+        # Línea separadora
+        pygame.draw.line(
+            self.screen,
+            NEON_CYAN,
+            (panel_x + 100, y_offset),
+            (panel_x + panel_width - 100, y_offset),
+            1,
+        )
+
+        y_offset += 30
+
+        # Características del juego
+        features_title = self.font_menu.render("CARACTERÍSTICAS", True, NEON_PINK)
+        features_rect = features_title.get_rect(center=(SCREEN_WIDTH // 2, y_offset))
+        self.screen.blit(features_title, features_rect)
+
+        y_offset += 45
+
+        features = [
+            "✦ 3 Niveles de dificultad progresiva",
+            "✦ Sistema de transformaciones geométricas",
+            "✦ Mecánicas de física y colisiones",
+            "✦ Sistema de puntuación y mejores tiempos",
+        ]
+
+        left_x = panel_x + 80
+        right_x = panel_x + panel_width // 2 + 40
+
+        for i, feature in enumerate(features):
+            if i < 2:
+                x_pos = left_x
+            else:
+                x_pos = right_x
+
+            y_pos = y_offset + (i % 2) * 35
+
+            feature_text = self.font_small.render(feature, True, NEON_CYAN)
+            self.screen.blit(feature_text, (x_pos, y_pos))
+
+        y_offset += 90
+
+        # Copyright
+        copyright_text = self.font_small.render(
+            "© 2025 - Todos los derechos reservados", True, NEON_PURPLE
+        )
+        copyright_rect = copyright_text.get_rect(center=(SCREEN_WIDTH // 2, y_offset))
+        self.screen.blit(copyright_text, copyright_rect)
 
         # Instrucciones
         instructions = self.font_small.render(
@@ -501,6 +734,100 @@ class Menu:
 
             # Texto de la opción
             option_font = pygame.font.Font(None, 40)
+            option_surf = option_font.render(option, True, color)
+            option_rect = option_surf.get_rect(center=button_rect.center)
+            self.screen.blit(option_surf, option_rect)
+
+    def draw_reset_confirmation_dialog(self, selected_option=0):
+        """
+        Dibuja un diálogo de confirmación para reiniciar el progreso
+
+        Args:
+            selected_option: 0 para "Sí", 1 para "No"
+        """
+        # Overlay semi-transparente
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 200))
+        self.screen.blit(overlay, (0, 0))
+
+        # Dimensiones del diálogo
+        dialog_width = 600
+        dialog_height = 300
+        dialog_x = (SCREEN_WIDTH - dialog_width) // 2
+        dialog_y = (SCREEN_HEIGHT - dialog_height) // 2
+
+        # Fondo del diálogo con bordes neón
+        dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
+        pygame.draw.rect(self.screen, BG_DARK, dialog_rect)
+        pygame.draw.rect(self.screen, NEON_ORANGE, dialog_rect, 3)
+
+        # Efecto de brillo en las esquinas
+        corner_size = 10
+        corners = [
+            (dialog_x, dialog_y),
+            (dialog_x + dialog_width - corner_size, dialog_y),
+            (dialog_x, dialog_y + dialog_height - corner_size),
+            (
+                dialog_x + dialog_width - corner_size,
+                dialog_y + dialog_height - corner_size,
+            ),
+        ]
+        for corner_x, corner_y in corners:
+            pygame.draw.circle(self.screen, NEON_ORANGE, (corner_x, corner_y), 5)
+
+        # Icono de advertencia
+        warning_font = pygame.font.Font(None, 80)
+        warning_icon = warning_font.render("⚠", True, NEON_ORANGE)
+        warning_rect = warning_icon.get_rect(center=(SCREEN_WIDTH // 2, dialog_y + 60))
+        self.screen.blit(warning_icon, warning_rect)
+
+        # Mensaje principal
+        message_font = pygame.font.Font(None, 42)
+        message_surf = message_font.render(
+            "¿Reiniciar todo el progreso?", True, NEON_PINK
+        )
+        message_rect = message_surf.get_rect(center=(SCREEN_WIDTH // 2, dialog_y + 120))
+        self.screen.blit(message_surf, message_rect)
+
+        # Advertencia
+        warning_text_font = pygame.font.Font(None, 28)
+        warning_text = warning_text_font.render(
+            "Esta acción no se puede deshacer", True, GRAY
+        )
+        warning_text_rect = warning_text.get_rect(
+            center=(SCREEN_WIDTH // 2, dialog_y + 155)
+        )
+        self.screen.blit(warning_text, warning_text_rect)
+
+        # Opciones
+        options = ["SÍ, REINICIAR", "NO, CANCELAR"]
+        option_y = dialog_y + 210
+        button_width = 180
+        button_height = 50
+        button_spacing = 40
+
+        total_width = len(options) * button_width + (len(options) - 1) * button_spacing
+        start_x = (SCREEN_WIDTH - total_width) // 2
+
+        for i, option in enumerate(options):
+            button_x = start_x + i * (button_width + button_spacing)
+            button_rect = pygame.Rect(button_x, option_y, button_width, button_height)
+
+            # Color según selección
+            if i == selected_option:
+                color = NEON_ORANGE if i == 0 else NEON_CYAN
+                bg_color = (*color[:3], 50)
+                # Efecto de pulso
+                pulse = abs(np.sin(self.menu_option_time * 3)) * 10
+                expanded_rect = button_rect.inflate(int(pulse), int(pulse))
+                pygame.draw.rect(self.screen, bg_color, expanded_rect)
+                pygame.draw.rect(self.screen, color, expanded_rect, 3)
+            else:
+                color = GRAY
+                pygame.draw.rect(self.screen, color, button_rect, 2)
+
+            # Texto de la opción
+            option_font = pygame.font.Font(None, 30)
             option_surf = option_font.render(option, True, color)
             option_rect = option_surf.get_rect(center=button_rect.center)
             self.screen.blit(option_surf, option_rect)

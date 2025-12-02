@@ -402,15 +402,56 @@ class LevelTransitionState(GameState):
 class ProfileState(GameState):
     """Estado de perfil de jugador"""
 
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.show_reset_confirmation = False
+        self.reset_option = 1  # 0=Sí, 1=No (por defecto en No)
+
     def handle_input(self, event):
-        result = self.manager.menu.handle_input(event, 1)
-        if result == "back":
+        # Si está mostrando el diálogo de confirmación de reinicio
+        if self.show_reset_confirmation:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    # Cambiar entre Sí y No
+                    self.reset_option = 1 - self.reset_option
+                    self.manager.audio.reproducir_efecto("click")
+                elif event.key == pygame.K_RETURN:
+                    self.manager.audio.reproducir_efecto("click")
+                    if self.reset_option == 0:  # Sí - Reiniciar progreso
+                        self.manager.player.reset_progress()
+                        self.manager.player.save()
+                        self.show_reset_confirmation = False
+                    else:  # No - Cancelar
+                        self.show_reset_confirmation = False
+                elif event.key == pygame.K_ESCAPE:
+                    # ESC cierra el diálogo (equivalente a "No")
+                    self.show_reset_confirmation = False
+                    self.manager.audio.reproducir_efecto("click")
+            return
+
+        # Navegación normal
+        result = self.manager.menu.handle_input(
+            event, 2
+        )  # 2 opciones: Volver y Reiniciar
+        if result == "select":
+            option = self.manager.menu.selected_option
+            if option == 0:  # Volver
+                self.manager.change_state("main_menu")
+                self.manager.menu.selected_option = 0
+            elif option == 1:  # Reiniciar progreso
+                self.show_reset_confirmation = True
+                self.reset_option = 1  # Por defecto en "No"
+        elif result == "back":
             self.manager.change_state("main_menu")
             self.manager.menu.selected_option = 0
 
     def draw(self, screen):
         screen.fill(BG_DARK)
         self.manager.menu.draw_profile(self.manager.player)
+
+        # Si está mostrando el diálogo de confirmación, dibujarlo encima
+        if self.show_reset_confirmation:
+            self.manager.menu.draw_reset_confirmation_dialog(self.reset_option)
 
 
 class AboutState(GameState):
