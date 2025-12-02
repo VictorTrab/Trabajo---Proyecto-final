@@ -1,22 +1,29 @@
 """
-NeonFit - Juego de Puzzle con Transformaciones Geometricas
+NeonFits - Juego de Puzzle con Transformaciones Geometricas
 Punto de entrada principal del juego
 """
 
 import pygame
 import sys
-from constantes import *
-from jugador import Player
-from sistema_menu import Menu
-from logica_juego import Game
-from estados_juego import (
+import os
+
+# Agregar el directorio del proyecto al path para imports relativos
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from config.constantes import *
+from config.jugador import Player
+from entidades.sistema_menu import Menu
+from config.configuracion import GameConfig
+from core.estados_juego import (
     MainMenuState,
     LevelSelectState,
     DifficultySelectState,
     PlayingState,
     TransitionState,
+    LevelTransitionState,
     ProfileState,
     AboutState,
+    SettingsState,
 )
 
 
@@ -29,8 +36,9 @@ class GameManager:
         pygame.display.set_caption("NeonFit - Puzzle de Transformaciones Geometricas")
         self.clock = pygame.time.Clock()
 
-        # crear jugador
+        # crear jugador y configuración
         self.player = Player.load()
+        self.config = GameConfig()
 
         self.menu = Menu(self.screen)
 
@@ -46,8 +54,10 @@ class GameManager:
             "difficulty_select": DifficultySelectState(self),
             "playing": PlayingState(self),
             "transition": TransitionState(self),
+            "level_transition": LevelTransitionState(self),
             "profile": ProfileState(self),
             "about": AboutState(self),
+            "settings": SettingsState(self),
         }
         self.current_state = self.states["main_menu"]
 
@@ -78,60 +88,50 @@ class GameManager:
         overlay.fill(BG_DARK)
         self.screen.blit(overlay, (0, 0))
 
-        # Título "NIVEL COMPLETADO"
-        font_title = pygame.font.Font(None, 100)
-        title_text = font_title.render("¡NIVEL COMPLETADO!", True, NEON_GREEN)
-        title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, 200))
+        # Verificar si es Game Over
+        is_game_over = self.transition_data.get("game_over", False)
 
-        # Glow en título
-        for offset in range(5, 0, -1):
-            glow_color = tuple(int(c * 0.2 * offset / 5) for c in NEON_GREEN)
-            for dx, dy in [
-                (offset * 2, offset * 2),
-                (-offset * 2, offset * 2),
-                (offset * 2, -offset * 2),
-                (-offset * 2, -offset * 2),
-            ]:
-                glow_text = font_title.render("¡NIVEL COMPLETADO!", True, glow_color)
-                self.screen.blit(glow_text, (title_rect.x + dx, title_rect.y + dy))
+        if is_game_over:
+            # Pantalla de Game Over
+            font_title = pygame.font.Font(None, 100)
+            title_text = font_title.render("GAME OVER", True, NEON_PINK)
+            title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, 200))
 
-        self.screen.blit(title_text, title_rect)
+            # Glow en título
+            for offset in range(5, 0, -1):
+                glow_color = tuple(int(c * 0.2 * offset / 5) for c in NEON_PINK)
+                for dx, dy in [
+                    (offset * 2, offset * 2),
+                    (-offset * 2, offset * 2),
+                    (offset * 2, -offset * 2),
+                    (-offset * 2, -offset * 2),
+                ]:
+                    glow_text = font_title.render("GAME OVER", True, glow_color)
+                    self.screen.blit(glow_text, (title_rect.x + dx, title_rect.y + dy))
 
-        # Estadísticas
-        font_stats = pygame.font.Font(None, 50)
-        stats_y = 320
+            self.screen.blit(title_text, title_rect)
 
-        stats = [
-            f"Nivel: {self.transition_data['level']}",
-            f"Dificultad: {self.transition_data['difficulty']}",
-            f"Movimientos: {self.transition_data['moves']}",
-            f"Tiempo: {self.transition_data['time']:.1f}s",
-        ]
+            # Mensaje
+            font_msg = pygame.font.Font(None, 50)
+            msg_text = font_msg.render(
+                "¡Te has quedado sin intentos!", True, NEON_ORANGE
+            )
+            msg_rect = msg_text.get_rect(center=(SCREEN_WIDTH // 2, 320))
+            self.screen.blit(msg_text, msg_rect)
 
-        for i, stat in enumerate(stats):
-            stat_text = font_stats.render(stat, True, NEON_CYAN)
-            stat_rect = stat_text.get_rect(center=(SCREEN_WIDTH // 2, stats_y + i * 60))
-            self.screen.blit(stat_text, stat_rect)
+            # Opciones
+            font_options = pygame.font.Font(None, 45)
+            option1_text = font_options.render(
+                "ENTER - Jugar de nuevo", True, NEON_CYAN
+            )
+            option1_rect = option1_text.get_rect(center=(SCREEN_WIDTH // 2, 450))
+            self.screen.blit(option1_text, option1_rect)
 
-        # Instrucción para continuar
-        font_instruction = pygame.font.Font(None, 40)
-        instruction_text = font_instruction.render(
-            "Presiona ENTER para continuar", True, NEON_PINK
-        )
-        instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, 650))
-
-        # Efecto parpadeante
-        alpha = int(128 + 127 * abs(pygame.time.get_ticks() % 1000 - 500) / 500)
-        instruction_surface = pygame.Surface(
-            instruction_text.get_size(), pygame.SRCALPHA
-        )
-        instruction_surface.fill((0, 0, 0, 0))
-        temp_text = font_instruction.render(
-            "Presiona ENTER para continuar", True, NEON_PINK
-        )
-        instruction_surface.blit(temp_text, (0, 0))
-        instruction_surface.set_alpha(alpha)
-        self.screen.blit(instruction_surface, instruction_rect)
+            option2_text = font_options.render(
+                "ESC - Menú Principal", True, NEON_PURPLE
+            )
+            option2_rect = option2_text.get_rect(center=(SCREEN_WIDTH // 2, 520))
+            self.screen.blit(option2_text, option2_rect)
 
     def run(self):
         """Bucle principal del juego"""

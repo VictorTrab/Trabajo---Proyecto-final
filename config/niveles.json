@@ -1,0 +1,31 @@
+{
+    "niveles": {
+        "1": {
+            "nombre": "Casa Simple",
+            "descripcion": "Una casa básica con techo",
+            "piezas": [
+                {"tipo": "CUADRADO", "posicion": "centro"},
+                {"tipo": "TRIANGULO", "posicion": "arriba"}
+            ]
+        },
+        "2": {
+            "nombre": "Persona",
+            "descripcion": "Una figura humana básica",
+            "piezas": [
+                {"tipo": "CIRCULO", "posicion": "arriba"},
+                {"tipo": "CUADRADO", "posicion": "centro"},
+                {"tipo": "RECTANGULO", "posicion": "izquierda"},
+                {"tipo": "RECTANGULO", "posicion": "derecha"}
+            ]
+        },
+        "3": {
+            "nombre": "Árbol",
+            "descripcion": "Un árbol con copa triangular",
+            "piezas": [
+                {"tipo": "TRIANGULO", "posicion": "arriba"},
+                {"tipo": "RECTANGULO", "posicion": "centro"},
+                {"tipo": "CUADRADO", "posicion": "abajo"}
+            ]
+        }
+    }
+}
