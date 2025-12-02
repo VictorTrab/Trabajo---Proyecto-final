@@ -62,11 +62,6 @@ GLOW_LAYERS = 3  # Número de capas para efecto glow
 
 # Archivos de guardado
 SAVE_FILE = "config/player_save.json"
-CONFIG_FILE = "config/game_config.json"
-
-# Tipos de indicadores visuales
-INDICATOR_TYPES = ["Teclado Virtual", "Barras de Acción", "Ninguno"]
-DEFAULT_INDICATOR = "Teclado Virtual"
 
 # Información del juego
 GAME_VERSION = "1.0.0"

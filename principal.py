@@ -14,7 +14,6 @@ from config.constantes import *
 from config.jugador import Player
 from entidades.sistema_menu import Menu
 from entidades.audio_simple import AudioSimple
-from config.configuracion import GameConfig
 from core.estados_juego import (
     MainMenuState,
     LevelSelectState,
@@ -23,7 +22,6 @@ from core.estados_juego import (
     LevelTransitionState,
     ProfileState,
     AboutState,
-    SettingsState,
 )
 
 
@@ -36,9 +34,8 @@ class GameManager:
         pygame.display.set_caption("CUBO: Arquitecto del Caos")
         self.clock = pygame.time.Clock()
 
-        # crear jugador y configuración
+        # crear jugador
         self.player = Player.load()
-        self.config = GameConfig()
 
         self.menu = Menu(self.screen)
 
@@ -59,7 +56,6 @@ class GameManager:
             "level_transition": LevelTransitionState(self),
             "profile": ProfileState(self),
             "about": AboutState(self),
-            "settings": SettingsState(self),
         }
         self.current_state = self.states["main_menu"]
 

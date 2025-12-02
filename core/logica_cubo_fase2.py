@@ -16,10 +16,11 @@ from entidades.sistema_particulas import ParticleSystem
 class GameCuboFase2:
     """Clase principal del juego CUBO - Fase 2: Piezas y magnetismo"""
 
-    def __init__(self, screen, level_number, player, config=None):
+    def __init__(self, screen, level_number, player, config=None, audio=None):
         self.screen = screen
         self.player = player
         self.config = config
+        self.audio = audio
         self.level_number = level_number
 
         self.font = pygame.font.Font(None, 40)

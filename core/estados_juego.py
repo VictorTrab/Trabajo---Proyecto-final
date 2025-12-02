@@ -29,7 +29,7 @@ class MainMenuState(GameState):
     """Estado del menu principal"""
 
     def handle_input(self, event):
-        result = self.manager.menu.handle_input(event, 6)
+        result = self.manager.menu.handle_input(event, 5)
         if result == "select":
             option = self.manager.menu.selected_option
             if option == 0:  # Jugar
@@ -38,16 +38,13 @@ class MainMenuState(GameState):
             elif option == 1:  # Niveles
                 self.manager.change_state("level_select")
                 self.manager.menu.selected_option = 0
-            elif option == 2:  # Configuración
-                self.manager.change_state("settings")
-                self.manager.menu.selected_option = 0
-            elif option == 3:  # Perfil
+            elif option == 2:  # Perfil
                 self.manager.change_state("profile")
                 self.manager.menu.selected_option = 0
-            elif option == 4:  # Acerca de
+            elif option == 3:  # Acerca de
                 self.manager.change_state("about")
                 self.manager.menu.selected_option = 0
-            elif option == 5:  # Salir
+            elif option == 4:  # Salir
                 self.manager.running = False
 
     def draw(self, screen):
@@ -70,8 +67,11 @@ class LevelSelectState(GameState):
                     self.manager.screen,
                     self.manager.selected_level,
                     self.manager.player,
-                    self.manager.config,
+                    audio=self.manager.audio,
                 )
+
+                # Reproducir música del nivel correspondiente
+                self.manager.audio.reproducir_musica_nivel(selected_level)
 
                 self.manager.change_state("playing")
         elif result == "back":
@@ -104,6 +104,8 @@ class PlayingState(GameState):
                     if self.exit_confirmation_option == 0:  # Sí
                         # Salir al menú de niveles
                         self.show_exit_confirmation = False
+                        # Reproducir sonido de salir
+                        self.manager.audio.reproducir_efecto("salir_nivel")
                         # Detener música del nivel inmediatamente
                         pygame.mixer.music.stop()
                         pygame.time.wait(50)
@@ -125,6 +127,9 @@ class PlayingState(GameState):
         if hasattr(self.manager.current_game, "esperando_confirmacion"):
             if self.manager.current_game.esperando_confirmacion:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    # Reproducir música de nivel completado
+                    self.manager.audio.reproducir_musica("completado")
+
                     # Iniciar transición al siguiente nivel
                     self.manager.transition_data = {
                         "level": self.manager.selected_level,
@@ -190,6 +195,9 @@ class PlayingState(GameState):
             # Logica de fin de juego
             if self.manager.current_game.failed:
                 # Game Over por intentos o tiempo - Ir a pantalla de transición con opciones
+                # Reproducir música de game over
+                self.manager.audio.reproducir_musica("game_over")
+
                 self.manager.transition_data = {
                     "level": self.manager.selected_level,
                     "attempts": self.manager.current_game.attempts_used,
@@ -239,7 +247,11 @@ class TransitionState(GameState):
                         self.manager.screen,
                         self.manager.selected_level,
                         self.manager.player,
-                        self.manager.config,
+                        audio=self.manager.audio,
+                    )
+                    # Reproducir música del nivel
+                    self.manager.audio.reproducir_musica_nivel(
+                        self.manager.selected_level
                     )
                     self.manager.change_state("playing")
                 else:
@@ -404,30 +416,24 @@ class ProfileState(GameState):
 class AboutState(GameState):
     """Estado Acerca De"""
 
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.music_started = False
+
     def handle_input(self, event):
         result = self.manager.menu.handle_input(event, 1)
         if result == "back":
+            # Volver a música del menú
+            self.manager.audio.reproducir_musica("menu")
+            self.music_started = False
             self.manager.change_state("main_menu")
             self.manager.menu.selected_option = 0
 
     def draw(self, screen):
+        # Reproducir música de créditos solo una vez
+        if not self.music_started:
+            self.manager.audio.reproducir_musica("creditos")
+            self.music_started = True
+
         screen.fill(BG_DARK)
         self.manager.menu.draw_about()
-
-
-class SettingsState(GameState):
-    """Estado de configuración"""
-
-    def handle_input(self, event):
-        result = self.manager.menu.handle_input(event, len(INDICATOR_TYPES))
-        if result == "select":
-            # Cambiar el indicador seleccionado
-            selected_indicator = INDICATOR_TYPES[self.manager.menu.selected_option]
-            self.manager.config.set_indicator(selected_indicator)
-        elif result == "back":
-            self.manager.change_state("main_menu")
-            self.manager.menu.selected_option = 0
-
-    def draw(self, screen):
-        screen.fill(BG_DARK)
-        self.manager.menu.draw_settings_menu(self.manager.config)

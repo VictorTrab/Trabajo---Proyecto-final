@@ -2,17 +2,23 @@
     "name": "Jugador",
     "levels_completed": {
         "1": true,
-        "2": false,
-        "3": false
+        "2": true,
+        "3": true
     },
     "best_scores": {
         "1": {
             "attempts": 0,
-            "time": 43.82460808753967
+            "time": 10.174484252929688
         },
-        "2": null,
-        "3": null
+        "2": {
+            "attempts": 0,
+            "time": 60.552196979522705
+        },
+        "3": {
+            "attempts": 0,
+            "time": 28.743107795715332
+        }
     },
-    "total_levels_completed": 1,
-    "unlocked_levels": 2
+    "total_levels_completed": 3,
+    "unlocked_levels": 4
 }

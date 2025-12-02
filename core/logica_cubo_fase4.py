@@ -19,7 +19,7 @@ from config.constantes import *
 class GameCuboFase4(GameCuboFase3):
     """Clase principal del juego CUBO - Fase 4: Meteoros y Portales"""
 
-    def __init__(self, screen, level_number, player, config=None):
+    def __init__(self, screen, level_number, player, config=None, audio=None):
         """
         Inicializa el juego Fase 4
 
@@ -28,6 +28,7 @@ class GameCuboFase4(GameCuboFase3):
             level_number: Número de nivel (1-3)
             player: Objeto Player
             config: Configuración del juego
+            audio: Sistema de audio
         """
         # Crear sistemas de Fase 4 ANTES de llamar a super().__init__()
         # porque _generar_piezas_para_objetivo() se llama en Fase2.__init__()
@@ -36,7 +37,7 @@ class GameCuboFase4(GameCuboFase3):
         self.sistema_powerups = SistemaPowerUps()
 
         # Inicializar fase 3 (que llama a Fase2, que llama a _generar_piezas_para_objetivo)
-        super().__init__(screen, level_number, player, config)
+        super().__init__(screen, level_number, player, config, audio)
 
         # Configurar zonas prohibidas para meteoros (sobre portales)
         posiciones_portales = []
@@ -177,6 +178,10 @@ class GameCuboFase4(GameCuboFase3):
         colisiones = self.generador_meteoros.verificar_colisiones(objetos)
 
         for meteoro, objeto in colisiones:
+            # Reproducir efecto de explosión
+            if self.audio:
+                self.audio.reproducir_efecto("explosion")
+
             if objeto == self.cubo:
                 # Impacto en CUBO
                 if self.sistema_powerups.tiene_escudo_activo():

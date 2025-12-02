@@ -290,13 +290,13 @@ class GeneradorNiveles:
 class GameCuboFase3(GameCuboFase2):
     """Fase 3: Validación avanzada, puntuación y múltiples niveles"""
 
-    def __init__(self, screen, level_number, player, config=None):
+    def __init__(self, screen, level_number, player, config=None, audio=None):
         # Inicializar generador de niveles
         self.generador_niveles = GeneradorNiveles()
         self.nivel_numero = level_number
 
         # Llamar al constructor padre
-        super().__init__(screen, level_number, player, config)
+        super().__init__(screen, level_number, player, config, audio)
 
         # Sistema de puntuación
         self.sistema_puntuacion = SistemaPuntuacion(self.time_limit)

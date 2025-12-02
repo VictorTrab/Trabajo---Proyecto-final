@@ -217,7 +217,7 @@ class Menu:
         self.draw_3d_pulse_title("CUBO", 240, NEON_PINK, (SCREEN_WIDTH // 2, 150))
 
         # Opciones del menú
-        options = ["Jugar", "Niveles", "Configuración", "Perfil", "Acerca de", "Salir"]
+        options = ["Jugar", "Niveles", "Perfil", "Acerca de", "Salir"]
         for i, option in enumerate(options):
             color = NEON_CYAN if i == self.selected_option else NEON_PURPLE
             y_pos = 300 + i * 70
@@ -427,120 +427,6 @@ class Menu:
         )
         inst_rect = instructions.get_rect(center=(SCREEN_WIDTH // 2, 720))
         self.screen.blit(instructions, inst_rect)
-
-    def draw_settings_menu(self, config):
-        """Dibuja el menú de configuración"""
-        self.draw_animated_background()
-
-        # Título
-        self.draw_3d_pulse_title(
-            "CONFIGURACIÓN", 180, NEON_ORANGE, (SCREEN_WIDTH // 2, 120)
-        )
-
-        # Sección de indicadores visuales
-        section_y = 250
-        section_title = self.font_menu.render("INDICADOR VISUAL", True, NEON_CYAN)
-        section_rect = section_title.get_rect(center=(SCREEN_WIDTH // 2, section_y))
-        self.screen.blit(section_title, section_rect)
-
-        # Descripción
-        desc_font = pygame.font.Font(None, 28)
-        desc_text = desc_font.render(
-            "Selecciona cómo quieres ver tus controles en el juego:", True, NEON_PURPLE
-        )
-        desc_rect = desc_text.get_rect(center=(SCREEN_WIDTH // 2, section_y + 50))
-        self.screen.blit(desc_text, desc_rect)
-
-        # Opciones de indicadores
-        options_y = section_y + 120
-
-        for i, indicator_type in enumerate(INDICATOR_TYPES):
-            y_pos = options_y + i * 80
-
-            # Verificar si es la opción seleccionada
-            is_selected = i == self.selected_option
-            is_current = indicator_type == config.indicator_type
-
-            # Colores según estado
-            if is_selected:
-                color = NEON_YELLOW
-                scale = 1.1
-            elif is_current:
-                color = NEON_GREEN
-                scale = 1.0
-            else:
-                color = NEON_PURPLE
-                scale = 0.9
-
-            # Renderizar opción
-            size = int(45 * scale)
-            option_font = pygame.font.Font(None, size)
-            option_text = option_font.render(indicator_type, True, color)
-            option_rect = option_text.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
-
-            # Glow si está seleccionada
-            if is_selected:
-                for offset in range(3, 0, -1):
-                    glow_color = tuple(int(c * 0.3 * offset / 3) for c in color)
-                    for dx, dy in [
-                        (offset, offset),
-                        (-offset, offset),
-                        (offset, -offset),
-                        (-offset, -offset),
-                    ]:
-                        glow = option_font.render(indicator_type, True, glow_color)
-                        glow_rect = glow.get_rect(
-                            center=(SCREEN_WIDTH // 2 + dx, y_pos + dy)
-                        )
-                        self.screen.blit(glow, glow_rect)
-
-            self.screen.blit(option_text, option_rect)
-
-            # Indicador de selección actual
-            if is_current:
-                check_font = pygame.font.Font(None, 40)
-                check = check_font.render("✓", True, NEON_GREEN)
-                check_rect = check.get_rect(center=(SCREEN_WIDTH // 2 - 200, y_pos))
-                self.screen.blit(check, check_rect)
-
-            # Flecha de selección
-            if is_selected:
-                arrow_font = pygame.font.Font(None, 50)
-                arrow = arrow_font.render("►", True, NEON_YELLOW)
-                arrow_rect = arrow.get_rect(center=(SCREEN_WIDTH // 2 - 250, y_pos))
-                self.screen.blit(arrow, arrow_rect)
-
-        # Descripciones de cada indicador
-        descriptions = [
-            "Muestra un teclado virtual en pantalla",
-            "Barras de progreso por tipo de acción",
-            "Sin indicador visual (modo limpio)",
-        ]
-
-        if 0 <= self.selected_option < len(descriptions):
-            desc_y = options_y + len(INDICATOR_TYPES) * 80 + 40
-            desc_detail = desc_font.render(
-                descriptions[self.selected_option], True, NEON_CYAN
-            )
-            desc_detail_rect = desc_detail.get_rect(center=(SCREEN_WIDTH // 2, desc_y))
-            self.screen.blit(desc_detail, desc_detail_rect)
-
-        # Instrucciones
-        inst_y = SCREEN_HEIGHT - 80
-        instructions = [
-            ("↑↓ Navegar", NEON_PURPLE),
-            ("ENTER Seleccionar", NEON_GREEN),
-            ("ESC Volver", NEON_ORANGE),
-        ]
-
-        inst_font = pygame.font.Font(None, 30)
-        total_width = sum(inst_font.size(text)[0] + 40 for text, _ in instructions)
-        start_x = (SCREEN_WIDTH - total_width) // 2
-
-        for text, color in instructions:
-            inst = inst_font.render(text, True, color)
-            self.screen.blit(inst, (start_x, inst_y))
-            start_x += inst_font.size(text)[0] + 40
 
     def draw_confirmation_dialog(self, message="¿Desea salir?", selected_option=0):
         """

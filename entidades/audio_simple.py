@@ -25,9 +25,13 @@ class AudioSimple:
         # Rutas de música
         self.rutas_musica = {
             "menu": "songs/SongMenu.mp3",
-            "juego": "songs/SongFacil.mp3",
-            "completado": "songs/SongGameStart.mp3",
+            "nivel1": "songs/Nivel1.mp3",
+            "nivel2": "songs/Nivel2.mp3",
+            "nivel3": "songs/Nivel3.mp3",
+            "completado": "songs/SongJugarNivel.mp3",
             "game_over": "songs/SongGameOver.mp3",
+            "creditos": "songs/SongCreditos.mp3",
+            "inicio_juego": "songs/SongGameStart.mp3",
         }
 
         # Rutas de efectos
@@ -36,6 +40,9 @@ class AudioSimple:
             "rotar": "songs/SongRotarFigura.mp3",
             "colocar": "songs/SongClick.mp3",
             "error": "songs/SongColisionBordeVentana.mp3",
+            "explosion": "songs/SongExplocion.mp3",
+            "salir_nivel": "songs/SongSalirDeNivel.mp3",
+            "iniciar_nivel": "songs/SongJugarNivel.mp3",
         }
 
         # Caché de efectos cargados
@@ -66,7 +73,7 @@ class AudioSimple:
         Reproduce música de fondo
 
         Args:
-            tipo: Tipo de música ("menu", "juego", "completado", "game_over")
+            tipo: Tipo de música ("menu", "nivel1", "nivel2", "nivel3", "completado", "game_over")
         """
         if not self.habilitado or not self.inicializado:
             return
@@ -123,6 +130,16 @@ class AudioSimple:
             sonido.play()
         except pygame.error:
             pass
+
+    def reproducir_musica_nivel(self, nivel_numero):
+        """
+        Reproduce la música correspondiente a un nivel específico
+
+        Args:
+            nivel_numero: Número del nivel (1, 2, 3)
+        """
+        tipo_musica = f"nivel{nivel_numero}"
+        self.reproducir_musica(tipo_musica)
 
     def detener_musica(self):
         """Detiene la música actual"""

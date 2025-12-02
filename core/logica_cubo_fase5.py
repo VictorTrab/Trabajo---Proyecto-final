@@ -16,7 +16,7 @@ from config.constantes import *
 class GameCuboFase5(GameCuboFase4):
     """Clase principal del juego CUBO - Fase 5: Sistema Emocional Avanzado"""
 
-    def __init__(self, screen, level_number, player, config=None):
+    def __init__(self, screen, level_number, player, config=None, audio=None):
         """
         Inicializa el juego Fase 5
 
@@ -25,9 +25,10 @@ class GameCuboFase5(GameCuboFase4):
             level_number: Número de nivel (1-3)
             player: Objeto Player
             config: Configuración del juego
+            audio: Sistema de audio
         """
         # Inicializar fase 4
-        super().__init__(screen, level_number, player, config)
+        super().__init__(screen, level_number, player, config, audio)
 
         # Sistemas de Fase 5
         self.efectos_emocionales = EfectosEmocionales()
