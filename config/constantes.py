@@ -1,5 +1,5 @@
 """
-Constantes del juego - NeonFit
+Constantes del juego - CUBO: Arquitecto del Caos
 """
 
 # Dimensiones de pantalla
@@ -33,21 +33,13 @@ BG_GRID_2 = (30, 15, 50)  # Púrpura oscuro 2
 
 # Configuración del juego
 FPS = 60
-# TOTAL_LEVELS se carga dinámicamente desde niveles.json
-# Ver función get_total_levels() al final de este archivo
+TOTAL_LEVELS = 3  # Solo 3 niveles simples
 
-# Dificultades
-DIFFICULTIES = ["Fácil", "Medio", "Difícil"]
+# Sistema de intentos simplificado
+MAX_ATTEMPTS = 10
 
-# Sistema de intentos por nivel
-ATTEMPTS_BY_DIFFICULTY = {"Fácil": 10, "Medio": 7, "Difícil": 5}
-
-# Tiempo límite por dificultad (en segundos)
-TIME_BY_DIFFICULTY = {
-    "Fácil": 120,  # 2 minutos
-    "Medio": 90,  # 1.5 minutos
-    "Difícil": 60,  # 1 minuto
-}
+# Tiempo límite simplificado (en segundos)
+TIME_LIMIT = 120  # 2 minutos por nivel
 
 # Tolerancia para validar encaje (en píxeles)
 SNAP_TOLERANCE = 20
@@ -84,20 +76,10 @@ GAME_YEAR = "2025"
 GAME_PURPOSE = "Proyecto de informatica grafica"
 
 
-# --- FUNCIÓN PARA CARGAR TOTAL_LEVELS DINÁMICAMENTE ---
+# Función simple para obtener total de niveles
 def get_total_levels():
-    """Carga el número total de niveles desde niveles.json"""
-    import json
-    import os
-
-    try:
-        niveles_path = os.path.join("config", "niveles.json")
-        with open(niveles_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return len(data.get("niveles", {}))
-    except Exception as e:
-        print(f"Error al cargar niveles.json: {e}")
-        return 3  # Valor por defecto
+    """Retorna el número total de niveles"""
+    return TOTAL_LEVELS
 
 
 # Cargar TOTAL_LEVELS dinámicamente

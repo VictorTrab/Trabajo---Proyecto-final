@@ -247,37 +247,30 @@ class Meteoro:
 
 
 class GeneradorMeteoros:
-    """Genera meteoros periódicamente según la dificultad"""
+    """Genera meteoros periódicamente"""
 
-    def __init__(self, difficulty):
-        """
-        Inicializa el generador de meteoros
-
-        Args:
-            difficulty: Dificultad del nivel (Fácil, Medio, Difícil)
-        """
-        self.difficulty = difficulty
+    def __init__(self):
+        """Inicializa el generador de meteoros"""
         self.meteoros = []
+        self.posiciones_prohibidas = []  # Lista de (x, y, radio) para evitar
 
-        # Configurar frecuencia según dificultad
-        if difficulty == "Fácil":
-            self.intervalo_min = 8.0  # segundos
-            self.intervalo_max = 12.0
-            self.velocidad_min = 150
-            self.velocidad_max = 200
-        elif difficulty == "Medio":
-            self.intervalo_min = 5.0
-            self.intervalo_max = 8.0
-            self.velocidad_min = 200
-            self.velocidad_max = 300
-        else:  # Difícil
-            self.intervalo_min = 3.0
-            self.intervalo_max = 6.0
-            self.velocidad_min = 250
-            self.velocidad_max = 400
+        # Configurar frecuencia
+        self.intervalo_min = 5.0  # segundos
+        self.intervalo_max = 8.0
+        self.velocidad_min = 200
+        self.velocidad_max = 300
 
         self.tiempo_siguiente = random.uniform(self.intervalo_min, self.intervalo_max)
         self.tiempo_acumulado = 0
+
+    def establecer_zonas_prohibidas(self, posiciones):
+        """
+        Establece zonas donde no deben aparecer meteoros (ej: sobre portales)
+
+        Args:
+            posiciones: Lista de tuplas (x, y, radio) que definen zonas a evitar
+        """
+        self.posiciones_prohibidas = posiciones
 
     def update(self, dt):
         """Actualiza el generador y crea nuevos meteoros"""
@@ -298,8 +291,31 @@ class GeneradorMeteoros:
                 self.meteoros.remove(meteoro)
 
     def _generar_meteoro(self):
-        """Genera un nuevo meteoro en posición aleatoria"""
-        x = random.randint(50, SCREEN_WIDTH - 50)
+        """Genera un nuevo meteoro en posición aleatoria, evitando zonas prohibidas"""
+        intentos = 0
+        max_intentos = 50
+
+        while intentos < max_intentos:
+            x = random.randint(50, SCREEN_WIDTH - 50)
+
+            # Verificar si está en zona prohibida
+            posicion_valida = True
+            for px, py, radio in self.posiciones_prohibidas:
+                # Verificar distancia horizontal (ya que el meteoro cae desde arriba)
+                distancia = abs(x - px)
+                if distancia < radio:
+                    posicion_valida = False
+                    break
+
+            if posicion_valida:
+                break
+
+            intentos += 1
+
+        # Si no se encontró posición válida después de intentos, usar una aleatoria
+        if intentos >= max_intentos:
+            x = random.randint(50, SCREEN_WIDTH - 50)
+
         y = -50  # Fuera de la pantalla arriba
         velocidad = random.uniform(self.velocidad_min, self.velocidad_max)
         tamano = random.randint(25, 40)

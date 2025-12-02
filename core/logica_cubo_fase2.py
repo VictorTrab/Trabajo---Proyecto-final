@@ -16,12 +16,11 @@ from entidades.sistema_particulas import ParticleSystem
 class GameCuboFase2:
     """Clase principal del juego CUBO - Fase 2: Piezas y magnetismo"""
 
-    def __init__(self, screen, level_number, difficulty, player, config=None):
+    def __init__(self, screen, level_number, player, config=None):
         self.screen = screen
         self.player = player
         self.config = config
         self.level_number = level_number
-        self.difficulty = difficulty
 
         self.font = pygame.font.Font(None, 40)
         self.font_small = pygame.font.Font(None, 30)
@@ -49,7 +48,7 @@ class GameCuboFase2:
         self.failed = False
         self.start_time = time.time()
         self.last_update_time = self.start_time  # Para calcular dt
-        self.time_limit = TIME_BY_DIFFICULTY.get(difficulty, 180)
+        self.time_limit = TIME_LIMIT
         self.time_remaining = self.time_limit
         self.time_elapsed = 0  # Tiempo transcurrido desde el inicio
 
@@ -110,13 +109,7 @@ class GameCuboFase2:
                 self.piezas.append(pieza)
 
         # 2. Generar piezas ADICIONALES (distractores)
-        # Cantidad de distractores según dificultad
-        if self.difficulty == "Fácil":
-            num_distractores = 2
-        elif self.difficulty == "Medio":
-            num_distractores = 3
-        else:  # Difícil
-            num_distractores = 5
+        num_distractores = 3  # Cantidad fija de distractores
 
         tipos_disponibles = [
             PiezaGeometrica.CUADRADO,
@@ -442,7 +435,6 @@ class GameCuboFase2:
                 # Guardar progreso del jugador
                 self.player.complete_level(
                     self.nivel_numero,
-                    self.difficulty,
                     0,  # attempts_used obsoleto, siempre 0
                     self.time_elapsed,
                 )

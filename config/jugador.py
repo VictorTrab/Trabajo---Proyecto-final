@@ -4,7 +4,7 @@ Sistema de jugador y gestión de guardado
 
 import json
 import os
-from config.constantes import SAVE_FILE, TOTAL_LEVELS, DIFFICULTIES
+from config.constantes import SAVE_FILE, TOTAL_LEVELS
 
 
 class Player:
@@ -12,27 +12,29 @@ class Player:
 
     def __init__(self, name="Jugador"):
         self.name = name
-        # Para cada nivel: {dificultad: completado}
-        self.levels_completed = {
-            i: {diff: False for diff in DIFFICULTIES}
-            for i in range(1, TOTAL_LEVELS + 1)
-        }
-        # Mejor puntuación por nivel y dificultad
-        self.best_scores = {
-            i: {diff: None for diff in DIFFICULTIES} for i in range(1, TOTAL_LEVELS + 1)
-        }
+        # Para cada nivel: completado (True/False)
+        self.levels_completed = {i: False for i in range(1, TOTAL_LEVELS + 1)}
+        # Mejor puntuación por nivel
+        self.best_scores = {i: None for i in range(1, TOTAL_LEVELS + 1)}
         self.total_levels_completed = 0
         self.unlocked_levels = 1  # Solo el nivel 1 está desbloqueado al inicio
 
-    def complete_level(self, level_number, difficulty, attempts_used, time_used):
+    def complete_level(self, level_number, attempts_used, time_used):
         """Marca un nivel como completado y actualiza estadísticas"""
         if 1 <= level_number <= TOTAL_LEVELS:
-            self.levels_completed[level_number][difficulty] = True
+            self.levels_completed[level_number] = True
 
             # Actualizar mejor puntuación
-            current_best = self.best_scores[level_number][difficulty]
-            if current_best is None:
-                self.best_scores[level_number][difficulty] = {
+            current_best = self.best_scores[level_number]
+
+            # Validar que current_best tiene el formato correcto
+            if (
+                current_best is None
+                or not isinstance(current_best, dict)
+                or "attempts" not in current_best
+            ):
+                # Primer completado o datos en formato antiguo
+                self.best_scores[level_number] = {
                     "attempts": attempts_used,
                     "time": time_used,
                 }
@@ -40,21 +42,18 @@ class Player:
                 # Mejor es menos intentos, y si empatan, menos tiempo
                 if attempts_used < current_best["attempts"] or (
                     attempts_used == current_best["attempts"]
-                    and time_used < current_best["time"]
+                    and time_used < current_best.get("time", float("inf"))
                 ):
-                    self.best_scores[level_number][difficulty] = {
+                    self.best_scores[level_number] = {
                         "attempts": attempts_used,
                         "time": time_used,
                     }
 
-            # Desbloquear siguiente nivel si se completa cualquier dificultad
-            if any(self.levels_completed[level_number].values()):
-                self.unlocked_levels = max(self.unlocked_levels, level_number + 1)
+            # Desbloquear siguiente nivel
+            self.unlocked_levels = max(self.unlocked_levels, level_number + 1)
 
             # Actualizar total
-            self.total_levels_completed = sum(
-                sum(diffs.values()) for diffs in self.levels_completed.values()
-            )
+            self.total_levels_completed = sum(self.levels_completed.values())
 
     def is_level_unlocked(self, level_number):
         """Verifica si un nivel está desbloqueado"""
@@ -62,20 +61,14 @@ class Player:
 
     def reset_progress(self):
         """Reinicia todo el progreso del jugador"""
-        self.levels_completed = {
-            i: {diff: False for diff in DIFFICULTIES}
-            for i in range(1, TOTAL_LEVELS + 1)
-        }
-        self.best_scores = {
-            i: {diff: None for diff in DIFFICULTIES} for i in range(1, TOTAL_LEVELS + 1)
-        }
+        self.levels_completed = {i: False for i in range(1, TOTAL_LEVELS + 1)}
+        self.best_scores = {i: None for i in range(1, TOTAL_LEVELS + 1)}
         self.total_levels_completed = 0
         self.unlocked_levels = 1
 
     def get_completion_percentage(self):
         """Retorna el porcentaje de niveles completados"""
-        total_possible = TOTAL_LEVELS * len(DIFFICULTIES)
-        return (self.total_levels_completed / total_possible) * 100
+        return (self.total_levels_completed / TOTAL_LEVELS) * 100
 
     def save(self):
         """Guarda el progreso del jugador en un archivo JSON"""
@@ -125,30 +118,12 @@ class Player:
             player.total_levels_completed = data.get("total_levels_completed", 0)
             player.unlocked_levels = data.get("unlocked_levels", 1)
 
-            # MIGRACIÓN: Asegurar que todos los niveles existan (para actualización de 3 a 10 niveles)
-            migrated = False
+            # Asegurar que todos los niveles existan
             for i in range(1, TOTAL_LEVELS + 1):
                 if i not in player.levels_completed:
-                    player.levels_completed[i] = {diff: False for diff in DIFFICULTIES}
-                    migrated = True
+                    player.levels_completed[i] = False
                 if i not in player.best_scores:
-                    player.best_scores[i] = {diff: None for diff in DIFFICULTIES}
-                    migrated = True
-
-            # LIMPIEZA: Eliminar niveles huérfanos (si había más niveles antes)
-            niveles_a_eliminar = [
-                k for k in player.levels_completed.keys() if k > TOTAL_LEVELS
-            ]
-            for nivel in niveles_a_eliminar:
-                del player.levels_completed[nivel]
-                if nivel in player.best_scores:
-                    del player.best_scores[nivel]
-                migrated = True
-
-            # Guardar automáticamente para actualizar el archivo con los nuevos niveles
-            if migrated:
-                print(f"Migrando datos del jugador: agregando niveles 4-{TOTAL_LEVELS}")
-                player.save()
+                    player.best_scores[i] = None
 
             return player
         except Exception as e:

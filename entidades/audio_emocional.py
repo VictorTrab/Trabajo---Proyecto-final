@@ -30,10 +30,11 @@ class AudioEmocional:
             "nivel_facil": "songs/SongFacil.mp3",
             "nivel_medio": "songs/SongMedia.mp3",
             "nivel_dificil": "songs/SongDificil.mp3",
-            "jugando": "songs/SongJugarNivel.mp3",
+            "jugando": "songs/SongMenu.mp3",  # Usar música del menú temporalmente
             "game_over": "songs/SongGameOver.mp3",
             "creditos": "songs/SongCreditos.mp3",
             # Mapeo de emociones a canciones existentes
+            "neutral": "songs/SongFacil.mp3",  # Emoción neutral usa música fácil
             "feliz": "songs/SongFacil.mp3",
             "triste": "songs/SongGameOver.mp3",
             "miedo": "songs/SongDificil.mp3",
@@ -104,27 +105,37 @@ class AudioEmocional:
         if not self.habilitado or not self.inicializado:
             return
 
-        # Si ya está sonando esta emoción, no hacer nada
+        # Solo evitar reproducir si es la MISMA emoción Y está REALMENTE sonando
         if self.emocion_actual == emocion and pygame.mixer.music.get_busy():
             return
 
         ruta = self.rutas_musica.get(emocion)
-        if not ruta or not self._verificar_archivo(ruta):
-            # print(f"[AudioEmocional] Archivo de música no encontrado: {ruta}")
+        if not ruta:
+            print(f"[AudioEmocional] Emoción no encontrada: {emocion}")
+            return
+
+        if not self._verificar_archivo(ruta):
+            print(f"[AudioEmocional] Archivo no encontrado: {ruta}")
             return
 
         try:
-            # Fade out de la música actual
+            # Detener música actual completamente antes de cargar nueva
             if pygame.mixer.music.get_busy():
-                pygame.mixer.music.fadeout(fade_ms // 2)
+                pygame.mixer.music.stop()
+                pygame.time.wait(50)
 
             # Cargar y reproducir nueva música
             pygame.mixer.music.load(ruta)
-            pygame.mixer.music.play(-1 if loop else 0, fade_ms=fade_ms)
+            pygame.mixer.music.play(-1 if loop else 0)
+
+            # Aplicar volumen
+            pygame.mixer.music.set_volume(self.volumen_musica)
 
             self.emocion_actual = emocion
             self.musica_actual = ruta
-            # print(f"[AudioEmocional] Reproduciendo música: {emocion}")
+
+        except pygame.error as e:
+            print(f"[AudioEmocional] Error al reproducir música: {e}")
 
         except pygame.error as e:
             print(f"[AudioEmocional] Error al reproducir música: {e}")

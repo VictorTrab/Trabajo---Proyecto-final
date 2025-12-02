@@ -5,7 +5,6 @@ Sistema de menús del juego con estilo Cyberpunk
 import pygame
 import numpy as np
 from config.constantes import *
-from entidades.audio_emocional import AudioEmocional
 
 
 class Menu:
@@ -17,14 +16,9 @@ class Menu:
         self.font_menu = pygame.font.Font(None, 50)
         self.font_small = pygame.font.Font(None, 30)
         self.selected_option = 0
-        self.selected_difficulty = 0  # 0=Fácil, 1=Medio, 2=Difícil
-        
-        # Sistema de audio
-        self.audio = AudioEmocional()
-        self.audio.reproducir_musica_menu()
 
         # Flag para identificar el tipo de menú actual
-        self.menu_type = "main"  # Valores: "main", "level_select", "difficulty", etc.
+        self.menu_type = "main"  # Valores: "main", "level_select", etc.
 
         # Animaciones
         self.breathe_offset = 0
@@ -220,7 +214,7 @@ class Menu:
         self.menu_option_time += 0.2
 
         # Título con efecto 3D Pulse Scale Animation
-        self.draw_3d_pulse_title("NEONFITS", 240, NEON_PINK, (SCREEN_WIDTH // 2, 150))
+        self.draw_3d_pulse_title("CUBO", 240, NEON_PINK, (SCREEN_WIDTH // 2, 150))
 
         # Opciones del menú
         options = ["Jugar", "Niveles", "Configuración", "Perfil", "Acerca de", "Salir"]
@@ -350,15 +344,16 @@ class Menu:
                 lock_rect = lock_text.get_rect(center=(x + box_width // 2, y + 65))
                 self.screen.blit(lock_text, lock_rect)
             else:
-                # Mostrar completados
-                completed = sum(player.levels_completed[i].values())
-                complete_text = self.font_small.render(
-                    f"{completed}/3", True, NEON_GREEN if completed > 0 else color
-                )
-                complete_rect = complete_text.get_rect(
-                    center=(x + box_width // 2, y + 65)
-                )
-                self.screen.blit(complete_text, complete_rect)
+                # Mostrar si está completado
+                completed = player.levels_completed[i]
+                if completed:
+                    complete_text = self.font_small.render(
+                        "✓ COMPLETO", True, NEON_GREEN
+                    )
+                    complete_rect = complete_text.get_rect(
+                        center=(x + box_width // 2, y + 65)
+                    )
+                    self.screen.blit(complete_text, complete_rect)
 
         # Instrucciones actualizadas para navegación en cuadrícula
         instructions = self.font_small.render(
@@ -367,92 +362,6 @@ class Menu:
             NEON_GREEN,
         )
         inst_rect = instructions.get_rect(center=(SCREEN_WIDTH // 2, 700))
-        self.screen.blit(instructions, inst_rect)
-
-    def draw_difficulty_select(self, level_number, player):
-        """Dibuja el menú de selección de dificultad"""
-        self.menu_type = "difficulty"  # Establecer tipo de menú
-        self.draw_animated_background()
-
-        # Título
-        self.draw_text_with_glow(
-            f"NIVEL {level_number}",
-            self.font_title,
-            NEON_PINK,
-            (SCREEN_WIDTH // 2, 100),
-        )
-
-        subtitle = self.font_menu.render("Selecciona Dificultad", True, NEON_CYAN)
-        subtitle_rect = subtitle.get_rect(center=(SCREEN_WIDTH // 2, 180))
-        self.screen.blit(subtitle, subtitle_rect)
-
-        # Dificultades
-        start_y = 280
-        spacing = 100
-
-        for i, difficulty in enumerate(DIFFICULTIES):
-            y = start_y + i * spacing
-            color = NEON_CYAN if i == self.selected_difficulty else NEON_PURPLE
-
-            # Cuadro de dificultad
-            rect_x = SCREEN_WIDTH // 2 - 200
-
-            if i == self.selected_difficulty:
-                for glow in range(3):
-                    glow_color = tuple(int(c * 0.3) for c in color)
-                    pygame.draw.rect(
-                        self.screen,
-                        glow_color,
-                        (
-                            rect_x - glow * 2,
-                            y - glow * 2,
-                            400 + glow * 4,
-                            70 + glow * 4,
-                        ),
-                        5,
-                    )
-
-            pygame.draw.rect(self.screen, color, (rect_x, y, 400, 70), 3)
-
-            # Nombre de dificultad
-            diff_text = self.font_menu.render(difficulty.upper(), True, color)
-            diff_rect = diff_text.get_rect(center=(SCREEN_WIDTH // 2, y + 20))
-            self.screen.blit(diff_text, diff_rect)
-
-            # Tiempo disponible
-            tiempo_minutos = TIME_BY_DIFFICULTY[difficulty] // 60
-            tiempo_segundos = TIME_BY_DIFFICULTY[difficulty] % 60
-            if tiempo_minutos > 0:
-                tiempo_str = f"{tiempo_minutos}:{tiempo_segundos:02d} min"
-            else:
-                tiempo_str = f"{tiempo_segundos}s"
-
-            info_text = self.font_small.render(
-                f"Tiempo disponible: {tiempo_str}",
-                True,
-                color,
-            )
-            info_rect = info_text.get_rect(center=(SCREEN_WIDTH // 2, y + 50))
-            self.screen.blit(info_text, info_rect)
-
-            # Mejor puntuación
-            best = player.best_scores[level_number][difficulty]
-            if best:
-                best_text = self.font_small.render(
-                    f"✓ Mejor tiempo: {best['time']:.1f}s",
-                    True,
-                    NEON_GREEN,
-                )
-                best_rect = best_text.get_rect(x=rect_x + 410, centery=y + 35)
-                self.screen.blit(best_text, best_rect)
-
-        # Instrucciones
-        instructions = self.font_small.render(
-            "Usa ↑↓ para navegar, ENTER para jugar, ESC para volver",
-            True,
-            NEON_GREEN,
-        )
-        inst_rect = instructions.get_rect(center=(SCREEN_WIDTH // 2, 680))
         self.screen.blit(instructions, inst_rect)
 
     def draw_profile(self, player):
@@ -498,7 +407,7 @@ class Menu:
         # Información del juego
         info_y = 220
         info_lines = [
-            ("NEONFIT", NEON_CYAN, self.font_menu),
+            ("CUBO: ARQUITECTO DEL CAOS", NEON_CYAN, self.font_menu),
             (f"Versión {GAME_VERSION}", NEON_PURPLE, self.font_small),
             (f"Autores: {GAME_AUTHORS}", NEON_GREEN, self.font_small),
             (f"Año: {GAME_YEAR}", NEON_PURPLE, self.font_small),
@@ -633,47 +542,114 @@ class Menu:
             self.screen.blit(inst, (start_x, inst_y))
             start_x += inst_font.size(text)[0] + 40
 
+    def draw_confirmation_dialog(self, message="¿Desea salir?", selected_option=0):
+        """
+        Dibuja un diálogo de confirmación con estilo cyberpunk
+
+        Args:
+            message: Mensaje a mostrar
+            selected_option: 0 para "Sí", 1 para "No"
+        """
+        # Overlay semi-transparente
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        self.screen.blit(overlay, (0, 0))
+
+        # Dimensiones del diálogo
+        dialog_width = 500
+        dialog_height = 250
+        dialog_x = (SCREEN_WIDTH - dialog_width) // 2
+        dialog_y = (SCREEN_HEIGHT - dialog_height) // 2
+
+        # Fondo del diálogo con bordes neón
+        dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width, dialog_height)
+        pygame.draw.rect(self.screen, BG_DARK, dialog_rect)
+        pygame.draw.rect(self.screen, NEON_CYAN, dialog_rect, 3)
+
+        # Efecto de brillo en las esquinas
+        corner_size = 10
+        corners = [
+            (dialog_x, dialog_y),
+            (dialog_x + dialog_width - corner_size, dialog_y),
+            (dialog_x, dialog_y + dialog_height - corner_size),
+            (
+                dialog_x + dialog_width - corner_size,
+                dialog_y + dialog_height - corner_size,
+            ),
+        ]
+        for corner_x, corner_y in corners:
+            pygame.draw.circle(self.screen, NEON_CYAN, (corner_x, corner_y), 5)
+
+        # Mensaje principal
+        message_font = pygame.font.Font(None, 48)
+        message_surf = message_font.render(message, True, NEON_CYAN)
+        message_rect = message_surf.get_rect(center=(SCREEN_WIDTH // 2, dialog_y + 80))
+        self.screen.blit(message_surf, message_rect)
+
+        # Opciones
+        options = ["SÍ", "NO"]
+        option_y = dialog_y + 150
+        button_width = 120
+        button_height = 50
+        button_spacing = 60
+
+        total_width = len(options) * button_width + (len(options) - 1) * button_spacing
+        start_x = (SCREEN_WIDTH - total_width) // 2
+
+        for i, option in enumerate(options):
+            button_x = start_x + i * (button_width + button_spacing)
+            button_rect = pygame.Rect(button_x, option_y, button_width, button_height)
+
+            # Color según selección
+            if i == selected_option:
+                color = NEON_CYAN
+                bg_color = (*NEON_CYAN[:3], 50)
+                # Efecto de pulso
+                pulse = abs(np.sin(self.menu_option_time * 3)) * 10
+                expanded_rect = button_rect.inflate(int(pulse), int(pulse))
+                pygame.draw.rect(self.screen, bg_color, expanded_rect)
+                pygame.draw.rect(self.screen, color, expanded_rect, 3)
+            else:
+                color = GRAY
+                pygame.draw.rect(self.screen, color, button_rect, 2)
+
+            # Texto de la opción
+            option_font = pygame.font.Font(None, 40)
+            option_surf = option_font.render(option, True, color)
+            option_rect = option_surf.get_rect(center=button_rect.center)
+            self.screen.blit(option_surf, option_rect)
+
     def handle_input(self, event, max_options):
         """Maneja la entrada del teclado en el menú"""
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 # Navegación circular para menús verticales
                 self.selected_option = (self.selected_option - 1) % max_options
-                self.selected_difficulty = (self.selected_difficulty - 1) % max_options
-                self.audio.reproducir_efecto("ui_navigate")
                 return "navigate"
             elif event.key == pygame.K_DOWN:
                 # Navegación circular para menús verticales
                 self.selected_option = (self.selected_option + 1) % max_options
-                self.selected_difficulty = (self.selected_difficulty + 1) % max_options
-                self.audio.reproducir_efecto("ui_navigate")
                 return "navigate"
             elif event.key == pygame.K_LEFT:
                 # Para menú de niveles horizontal
                 if self.menu_type == "level_select":
                     if self.selected_option > 0:
                         self.selected_option -= 1
-                        self.audio.reproducir_efecto("ui_navigate")
                 else:
                     self.selected_option = max(0, self.selected_option - 1)
-                    self.audio.reproducir_efecto("ui_navigate")
                 return "navigate"
             elif event.key == pygame.K_RIGHT:
                 # Para menú de niveles horizontal
                 if self.menu_type == "level_select":
                     if self.selected_option < max_options - 1:
                         self.selected_option += 1
-                        self.audio.reproducir_efecto("ui_navigate")
                 else:
                     self.selected_option = min(
                         max_options - 1, self.selected_option + 1
                     )
-                    self.audio.reproducir_efecto("ui_navigate")
                 return "navigate"
             elif event.key == pygame.K_RETURN:
-                self.audio.reproducir_efecto("ui_select")
                 return "select"
             elif event.key == pygame.K_ESCAPE:
-                self.audio.reproducir_efecto("ui_back")
                 return "back"
         return None

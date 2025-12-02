@@ -1,5 +1,5 @@
 """
-NeonFits - Juego de Puzzle con Transformaciones Geometricas
+CUBO: Arquitecto del Caos - Juego de Puzzle con Transformaciones Geometricas
 Punto de entrada principal del juego
 """
 
@@ -13,11 +13,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config.constantes import *
 from config.jugador import Player
 from entidades.sistema_menu import Menu
+from entidades.audio_simple import AudioSimple
 from config.configuracion import GameConfig
 from core.estados_juego import (
     MainMenuState,
     LevelSelectState,
-    DifficultySelectState,
     PlayingState,
     TransitionState,
     LevelTransitionState,
@@ -33,7 +33,7 @@ class GameManager:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("NeonFit - Puzzle de Transformaciones Geometricas")
+        pygame.display.set_caption("CUBO: Arquitecto del Caos")
         self.clock = pygame.time.Clock()
 
         # crear jugador y configuración
@@ -41,6 +41,9 @@ class GameManager:
         self.config = GameConfig()
 
         self.menu = Menu(self.screen)
+
+        # Sistema de audio simple (singleton)
+        self.audio = AudioSimple()
 
         self.current_game = None
         self.selected_level = None
@@ -51,7 +54,6 @@ class GameManager:
         self.states = {
             "main_menu": MainMenuState(self),
             "level_select": LevelSelectState(self),
-            "difficulty_select": DifficultySelectState(self),
             "playing": PlayingState(self),
             "transition": TransitionState(self),
             "level_transition": LevelTransitionState(self),
@@ -60,6 +62,9 @@ class GameManager:
             "settings": SettingsState(self),
         }
         self.current_state = self.states["main_menu"]
+
+        # Iniciar música del menú
+        self.audio.reproducir_musica("menu")
 
     def change_state(self, state_name):
         """Cambia el estado actual del juego"""

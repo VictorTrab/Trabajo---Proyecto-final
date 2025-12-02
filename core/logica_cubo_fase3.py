@@ -19,14 +19,12 @@ from core.logica_cubo_fase2 import GameCuboFase2
 class SistemaPuntuacion:
     """Sistema de puntuación basado en tiempo y precisión"""
 
-    def __init__(self, tiempo_limite, difficulty):
+    def __init__(self, tiempo_limite):
         self.tiempo_limite = tiempo_limite
-        self.difficulty = difficulty
         self.puntos_base = 1000
         self.bonus_tiempo_max = 500
         self.bonus_precision_max = 300
         self.bonus_sin_errores = 200
-        self.multiplicador_dificultad = {"Fácil": 1.0, "Medio": 1.5, "Difícil": 2.0}
 
     def calcular_puntuacion(
         self, tiempo_usado, intentos_fallidos, piezas_usadas, piezas_necesarias
@@ -61,18 +59,12 @@ class SistemaPuntuacion:
         # Penalización por intentos fallidos
         penalizacion_intentos = intentos_fallidos * 25
 
-        # Aplicar multiplicador de dificultad
-        multiplicador = self.multiplicador_dificultad.get(self.difficulty, 1.0)
-
         puntos_total = int(
-            (
-                puntos
-                + bonus_tiempo
-                + bonus_precision
-                + bonus_sin_errores
-                - penalizacion_intentos
-            )
-            * multiplicador
+            puntos
+            + bonus_tiempo
+            + bonus_precision
+            + bonus_sin_errores
+            - penalizacion_intentos
         )
         puntos_total = max(0, puntos_total)  # No permitir puntuación negativa
 
@@ -82,17 +74,16 @@ class SistemaPuntuacion:
             "bonus_precision": bonus_precision,
             "bonus_sin_errores": bonus_sin_errores,
             "penalizacion_intentos": penalizacion_intentos,
-            "multiplicador": multiplicador,
             "puntos_total": puntos_total,
             "tiempo_usado": tiempo_usado,
             "intentos_fallidos": intentos_fallidos,
-            "estrellas": self._calcular_estrellas(puntos_total, multiplicador),
+            "estrellas": self._calcular_estrellas(puntos_total),
         }
 
-    def _calcular_estrellas(self, puntos, multiplicador):
+    def _calcular_estrellas(self, puntos):
         """Calcula el número de estrellas (1-3) basado en la puntuación"""
-        # Ajustar umbrales según dificultad
-        umbral_base = 1000 * multiplicador
+        # Umbrales fijos de puntuación
+        umbral_base = 1000
 
         if puntos >= umbral_base * 1.5:
             return 3  # Excelente
@@ -223,13 +214,12 @@ class GeneradorNiveles:
         }
         return tipos_mapa.get(tipo_str, PiezaGeometrica.CUADRADO)
 
-    def obtener_definicion_nivel(self, nivel_numero, difficulty):
+    def obtener_definicion_nivel(self, nivel_numero):
         """
         Retorna la definición de figuras objetivo según el nivel
 
         Args:
-            nivel_numero: Número del nivel (1-N)
-            difficulty: Dificultad del juego
+            nivel_numero: Número del nivel (1-3)
 
         Returns:
             list de definiciones de piezas
@@ -287,29 +277,29 @@ class GeneradorNiveles:
 
         return definicion
 
-    def calcular_piezas_distractor(self, nivel_numero, difficulty):
-        """Calcula cuántas piezas distractor agregar según nivel y dificultad"""
-        base_distractors = {"Fácil": 2, "Medio": 3, "Difícil": 5}
+    def calcular_piezas_distractor(self, nivel_numero):
+        """Calcula cuántas piezas distractor agregar según nivel"""
+        base_distractors = 3
 
         # Agregar más distractores en niveles altos
-        extra_por_nivel = nivel_numero // 3
+        extra_por_nivel = nivel_numero // 2
 
-        return base_distractors.get(difficulty, 3) + extra_por_nivel
+        return base_distractors + extra_por_nivel
 
 
 class GameCuboFase3(GameCuboFase2):
     """Fase 3: Validación avanzada, puntuación y múltiples niveles"""
 
-    def __init__(self, screen, level_number, difficulty, player, config=None):
+    def __init__(self, screen, level_number, player, config=None):
         # Inicializar generador de niveles
         self.generador_niveles = GeneradorNiveles()
         self.nivel_numero = level_number
 
         # Llamar al constructor padre
-        super().__init__(screen, level_number, difficulty, player, config)
+        super().__init__(screen, level_number, player, config)
 
         # Sistema de puntuación
-        self.sistema_puntuacion = SistemaPuntuacion(self.time_limit, difficulty)
+        self.sistema_puntuacion = SistemaPuntuacion(self.time_limit)
 
         # Sistema de pistas
         self.sistema_pistas = SistemaPistas(max_pistas=3)
@@ -330,9 +320,7 @@ class GameCuboFase3(GameCuboFase2):
 
     def _crear_figura_objetivo(self):
         """Crea la figura objetivo según el nivel actual"""
-        definicion = self.generador_niveles.obtener_definicion_nivel(
-            self.nivel_numero, self.difficulty
-        )
+        definicion = self.generador_niveles.obtener_definicion_nivel(self.nivel_numero)
 
         # Posicionar objetivo en la esquina superior derecha
         objetivo_x = SCREEN_WIDTH - 150
@@ -343,7 +331,7 @@ class GameCuboFase3(GameCuboFase2):
         """Genera piezas con distractores según el nivel"""
         # Calcular número de distractores
         num_distractores = self.generador_niveles.calcular_piezas_distractor(
-            self.nivel_numero, self.difficulty
+            self.nivel_numero
         )
 
         # Llamar al método padre pero con número personalizado de distractores
@@ -670,10 +658,6 @@ class GameCuboFase3(GameCuboFase2):
             detalles.append(
                 (f"Pistas usadas:", f"-{resultado['penalizacion_pistas']}", NEON_ORANGE)
             )
-
-        detalles.append(
-            (f"Multiplicador:", f"x{resultado['multiplicador']}", NEON_YELLOW)
-        )
 
         for concepto, valor, color in detalles:
             texto_concepto = self.font_small.render(concepto, True, color)

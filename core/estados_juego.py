@@ -3,6 +3,7 @@ from config.constantes import *
 from core.logica_cubo_fase3 import GameCuboFase3
 from core.logica_cubo_fase4 import GameCuboFase4
 from core.logica_cubo_fase5 import GameCuboFase5
+from entidades.audio_simple import AudioSimple
 
 
 class GameState:
@@ -63,8 +64,16 @@ class LevelSelectState(GameState):
             selected_level = self.manager.menu.selected_option + 1
             if self.manager.player.is_level_unlocked(selected_level):
                 self.manager.selected_level = selected_level
-                self.manager.change_state("difficulty_select")
-                self.manager.menu.selected_difficulty = 0
+
+                # Crear instancia del juego (Fase 5: Sistema Emocional Avanzado)
+                self.manager.current_game = GameCuboFase5(
+                    self.manager.screen,
+                    self.manager.selected_level,
+                    self.manager.player,
+                    self.manager.config,
+                )
+
+                self.manager.change_state("playing")
         elif result == "back":
             self.manager.change_state("main_menu")
             self.manager.menu.selected_option = 0
@@ -74,40 +83,44 @@ class LevelSelectState(GameState):
         self.manager.menu.draw_level_select(self.manager.player)
 
 
-class DifficultySelectState(GameState):
-    """Estado de seleccion de dificultad"""
-
-    def handle_input(self, event):
-        result = self.manager.menu.handle_input(event, len(DIFFICULTIES))
-        if result == "select":
-            difficulty = DIFFICULTIES[self.manager.menu.selected_difficulty]
-
-            # Crear instancia del juego (Fase 5: Sistema Emocional Avanzado)
-            self.manager.current_game = GameCuboFase5(
-                self.manager.screen,
-                self.manager.selected_level,
-                difficulty,
-                self.manager.player,
-                self.manager.config,
-            )
-
-            self.manager.change_state("playing")
-        elif result == "back":
-            self.manager.change_state("level_select")
-            self.manager.menu.selected_option = 0
-            self.manager.menu.selected_difficulty = 0
-
-    def draw(self, screen):
-        screen.fill(BG_DARK)
-        self.manager.menu.draw_difficulty_select(
-            self.manager.selected_level, self.manager.player
-        )
-
-
 class PlayingState(GameState):
     """Estado de juego activo"""
 
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.show_exit_confirmation = False
+        self.exit_confirmation_option = 1  # 0=Sí, 1=No (por defecto en No)
+
     def handle_input(self, event):
+        # Si está mostrando el diálogo de confirmación de salida
+        if self.show_exit_confirmation:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    # Cambiar entre Sí y No
+                    self.exit_confirmation_option = 1 - self.exit_confirmation_option
+                    self.manager.audio.reproducir_efecto("click")
+                elif event.key == pygame.K_RETURN:
+                    self.manager.audio.reproducir_efecto("click")
+                    if self.exit_confirmation_option == 0:  # Sí
+                        # Salir al menú de niveles
+                        self.show_exit_confirmation = False
+                        # Detener música del nivel inmediatamente
+                        pygame.mixer.music.stop()
+                        pygame.time.wait(50)
+                        self.manager.change_state("level_select")
+                        self.manager.menu.selected_option = 0
+                        # Reproducir música del menú
+                        self.manager.audio.reproducir_musica("menu")
+                        self.manager.player.save()
+                    else:  # No
+                        # Cerrar diálogo y continuar jugando
+                        self.show_exit_confirmation = False
+                elif event.key == pygame.K_ESCAPE:
+                    # ESC cierra el diálogo (equivalente a "No")
+                    self.show_exit_confirmation = False
+                    self.manager.audio.reproducir_efecto("click")
+            return  # No procesar más eventos si el diálogo está activo
+
         # Si el juego está esperando confirmación, manejar ENTER
         if hasattr(self.manager.current_game, "esperando_confirmacion"):
             if self.manager.current_game.esperando_confirmacion:
@@ -115,9 +128,6 @@ class PlayingState(GameState):
                     # Iniciar transición al siguiente nivel
                     self.manager.transition_data = {
                         "level": self.manager.selected_level,
-                        "difficulty": DIFFICULTIES[
-                            self.manager.menu.selected_difficulty
-                        ],
                         "snapshot": self.manager.screen.copy(),
                         "completed": True,
                     }
@@ -135,10 +145,10 @@ class PlayingState(GameState):
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self.manager.change_state("difficulty_select")
-                self.manager.menu.selected_option = 0
-                self.manager.menu.selected_difficulty = 0
-                self.manager.player.save()
+                # Mostrar pantalla de confirmación
+                self.show_exit_confirmation = True
+                self.exit_confirmation_option = 1  # Por defecto en "No"
+                self.manager.audio.reproducir_efecto("click")
             elif event.key == pygame.K_SPACE:
                 # Verificar directamente el flag completed
                 if self.manager.current_game.completed:
@@ -148,6 +158,10 @@ class PlayingState(GameState):
                 self.manager.current_game.handle_input(None, event)
 
     def update(self):
+        # Si está mostrando el diálogo de confirmación, no actualizar el juego
+        if self.show_exit_confirmation:
+            return
+
         # No manejar entrada si está esperando confirmación
         if hasattr(self.manager.current_game, "esperando_confirmacion"):
             if not self.manager.current_game.esperando_confirmacion:
@@ -178,7 +192,6 @@ class PlayingState(GameState):
                 # Game Over por intentos o tiempo - Ir a pantalla de transición con opciones
                 self.manager.transition_data = {
                     "level": self.manager.selected_level,
-                    "difficulty": DIFFICULTIES[self.manager.menu.selected_difficulty],
                     "attempts": self.manager.current_game.attempts_used,
                     "time": 0,
                     "snapshot": self.manager.screen.copy(),
@@ -187,8 +200,13 @@ class PlayingState(GameState):
                 self.manager.change_state("transition")
             else:
                 # Nivel completado pero sin sistema de espera (fases antiguas)
+                # Detener música del nivel inmediatamente
+                pygame.mixer.music.stop()
+                pygame.time.wait(50)
                 self.manager.change_state("level_select")
                 self.manager.menu.selected_option = 0
+                # Reproducir música del menú
+                self.manager.audio.reproducir_musica("menu")
                 self.manager.player.save()
 
     def draw(self, screen):
@@ -196,6 +214,12 @@ class PlayingState(GameState):
         if hasattr(self.manager.current_game, "draw"):
             self.manager.current_game.draw()
         # De lo contrario, el juego original dibuja en update()
+
+        # Si está mostrando el diálogo de confirmación, dibujarlo encima
+        if self.show_exit_confirmation:
+            self.manager.menu.draw_confirmation_dialog(
+                "¿Desea salir?", self.exit_confirmation_option
+            )
 
 
 class TransitionState(GameState):
@@ -211,27 +235,34 @@ class TransitionState(GameState):
             if event.key == pygame.K_RETURN:
                 if is_game_over:
                     # Reiniciar desde el mismo nivel
-                    difficulty = DIFFICULTIES[self.manager.menu.selected_difficulty]
                     self.manager.current_game = GameCuboFase5(
                         self.manager.screen,
                         self.manager.selected_level,
-                        difficulty,
                         self.manager.player,
                         self.manager.config,
                     )
                     self.manager.change_state("playing")
                 else:
-                    # Nivel completado - volver a selección de dificultad
-                    self.manager.change_state("difficulty_select")
+                    # Nivel completado - volver a selección de niveles
+                    # Detener música del nivel inmediatamente
+                    pygame.mixer.music.stop()
+                    pygame.time.wait(50)
+                    self.manager.change_state("level_select")
                     self.manager.menu.selected_option = 0
-                    self.manager.menu.selected_difficulty = 0
+                    # Reproducir música del menú
+                    self.manager.audio.reproducir_musica("menu")
 
                 self.manager.transition_data = None
 
             elif event.key == pygame.K_ESCAPE and is_game_over:
                 # Solo en Game Over: volver al menú principal
+                # Detener música del nivel inmediatamente
+                pygame.mixer.music.stop()
+                pygame.time.wait(50)
                 self.manager.change_state("main_menu")
                 self.manager.menu.selected_option = 0
+                # Reproducir música del menú
+                self.manager.audio.reproducir_musica("menu")
                 self.manager.transition_data = None
 
     def draw(self, screen):
@@ -267,8 +298,13 @@ class LevelTransitionState(GameState):
         # Cuando termine la animación, ir a selección de nivel
         if self.animation_time >= self.animation_duration and not self.completed:
             self.completed = True
+            # Detener música del nivel inmediatamente
+            pygame.mixer.music.stop()
+            pygame.time.wait(50)
             self.manager.change_state("level_select")
             self.manager.menu.selected_option = 0
+            # Reproducir música del menú
+            self.manager.audio.reproducir_musica("menu")
 
     def draw(self, screen):
         # Dibujar el snapshot del juego

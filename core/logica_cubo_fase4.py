@@ -5,41 +5,127 @@ Meteoros, portales y power-ups
 
 import pygame
 import time
+import random
+import math
 from core.logica_cubo_fase3 import GameCuboFase3
 from entidades.meteoro import GeneradorMeteoros
 from entidades.portal import SistemaPortales
 from entidades.powerup import SistemaPowerUps
 from entidades.cubo import Cubo
+from entidades.pieza_geometrica import PiezaGeometrica
 from config.constantes import *
 
 
 class GameCuboFase4(GameCuboFase3):
     """Clase principal del juego CUBO - Fase 4: Meteoros y Portales"""
 
-    def __init__(self, screen, level_number, difficulty, player, config=None):
+    def __init__(self, screen, level_number, player, config=None):
         """
         Inicializa el juego Fase 4
 
         Args:
             screen: Pantalla de pygame
-            level_number: Número de nivel (1-10)
-            difficulty: Dificultad ("Fácil", "Medio", "Difícil")
+            level_number: Número de nivel (1-3)
             player: Objeto Player
             config: Configuración del juego
         """
-        # Inicializar fase 3
-        super().__init__(screen, level_number, difficulty, player, config)
-
-        # Sistemas de Fase 4
-        self.generador_meteoros = GeneradorMeteoros(difficulty)
+        # Crear sistemas de Fase 4 ANTES de llamar a super().__init__()
+        # porque _generar_piezas_para_objetivo() se llama en Fase2.__init__()
+        self.generador_meteoros = GeneradorMeteoros()
         self.sistema_portales = SistemaPortales(num_pares=2)  # 2 pares de portales
         self.sistema_powerups = SistemaPowerUps()
+
+        # Inicializar fase 3 (que llama a Fase2, que llama a _generar_piezas_para_objetivo)
+        super().__init__(screen, level_number, player, config)
+
+        # Configurar zonas prohibidas para meteoros (sobre portales)
+        posiciones_portales = []
+        for entrada, salida in self.sistema_portales.pares_portales:
+            posiciones_portales.append((entrada.x, entrada.y, entrada.radio + 30))
+            posiciones_portales.append((salida.x, salida.y, salida.radio + 30))
+        self.generador_meteoros.establecer_zonas_prohibidas(posiciones_portales)
 
         # Estado de Fase 4
         self.meteoros_esquivados = 0
         self.daño_recibido = 0
         self.portales_usados = 0
         self.powerups_recogidos = 0
+
+    def _generar_piezas_para_objetivo(self):
+        """
+        Sobrescribe el método de Fase 3 para evitar generar piezas sobre portales
+        """
+        # Obtener posiciones de todos los portales
+        posiciones_portales = []
+        for entrada, salida in self.sistema_portales.pares_portales:
+            posiciones_portales.append((entrada.x, entrada.y, entrada.radio + 50))
+            posiciones_portales.append((salida.x, salida.y, salida.radio + 50))
+
+        # Calcular número de distractores
+        num_distractores = self.generador_niveles.calcular_piezas_distractor(
+            self.nivel_numero
+        )
+
+        margen = 100
+        posiciones_usadas = []
+
+        def obtener_posicion_libre():
+            intentos = 0
+            while intentos < 150:  # Más intentos para considerar portales
+                x = random.randint(margen, SCREEN_WIDTH - margen - 200)
+                y = random.randint(margen, SCREEN_HEIGHT - margen)
+
+                muy_cerca = False
+
+                # Verificar distancia con otras piezas
+                for px, py in posiciones_usadas:
+                    distancia = math.sqrt((x - px) ** 2 + (y - py) ** 2)
+                    if distancia < 60:
+                        muy_cerca = True
+                        break
+
+                # Verificar distancia con portales para evitar bucle de teletransportación
+                if not muy_cerca:
+                    for portal_x, portal_y, portal_radio in posiciones_portales:
+                        distancia = math.sqrt((x - portal_x) ** 2 + (y - portal_y) ** 2)
+                        if (
+                            distancia < portal_radio
+                        ):  # Zona de seguridad alrededor del portal
+                            muy_cerca = True
+                            break
+
+                if not muy_cerca:
+                    posiciones_usadas.append((x, y))
+                    return x, y
+
+                intentos += 1
+
+            # Si no se encuentra posición después de muchos intentos, usar posición aleatoria
+            x = random.randint(margen, SCREEN_WIDTH - margen - 200)
+            y = random.randint(margen, SCREEN_HEIGHT - margen)
+            posiciones_usadas.append((x, y))
+            return x, y
+
+        # Generar piezas necesarias
+        for definicion in self.figura_objetivo.definicion:
+            x, y = obtener_posicion_libre()
+            pieza = PiezaGeometrica(x, y, definicion["tipo"])
+            self.piezas.append(pieza)
+
+        # Generar piezas distractor
+        tipos_disponibles = [
+            PiezaGeometrica.CUADRADO,
+            PiezaGeometrica.TRIANGULO,
+            PiezaGeometrica.CIRCULO,
+            PiezaGeometrica.ROMBO,
+            PiezaGeometrica.RECTANGULO,
+        ]
+
+        for _ in range(num_distractores):
+            x, y = obtener_posicion_libre()
+            tipo = random.choice(tipos_disponibles)
+            pieza = PiezaGeometrica(x, y, tipo)
+            self.piezas.append(pieza)
 
     def handle_input(self, keys, event=None):
         """Maneja la entrada del jugador (heredado de Fase 3)"""

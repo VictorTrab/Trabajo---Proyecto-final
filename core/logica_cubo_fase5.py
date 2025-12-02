@@ -1,12 +1,11 @@
 """
 Lógica del juego CUBO: Arquitecto del Caos - Fase 5
-Sistema Emocional Avanzado con efectos visuales, audio y narrativa
+Sistema Emocional Avanzado con efectos visuales y narrativa
 """
 
 import pygame
 from core.logica_cubo_fase4 import GameCuboFase4
 from entidades.efectos_emocionales import EfectosEmocionales
-from entidades.audio_emocional import AudioEmocional
 from entidades.animaciones_emocionales import AnimadorEmocional, AnimacionContinua
 from entidades.narrativa_dinamica import NarrativaDinamica
 from entidades.combo_emocional import ComboEmocional, VisualizadorCombo
@@ -17,28 +16,21 @@ from config.constantes import *
 class GameCuboFase5(GameCuboFase4):
     """Clase principal del juego CUBO - Fase 5: Sistema Emocional Avanzado"""
 
-    def __init__(self, screen, level_number, difficulty, player, config=None):
+    def __init__(self, screen, level_number, player, config=None):
         """
         Inicializa el juego Fase 5
 
         Args:
             screen: Pantalla de pygame
-            level_number: Número de nivel (1-10)
-            difficulty: Dificultad ("Fácil", "Medio", "Difícil")
+            level_number: Número de nivel (1-3)
             player: Objeto Player
-            config: Configuración del juego (puede incluir habilitar_audio)
+            config: Configuración del juego
         """
         # Inicializar fase 4
-        super().__init__(screen, level_number, difficulty, player, config)
-
-        # Configuración de audio
-        habilitar_audio = True
-        if config and isinstance(config, dict):
-            habilitar_audio = config.get("habilitar_audio", True)
+        super().__init__(screen, level_number, player, config)
 
         # Sistemas de Fase 5
         self.efectos_emocionales = EfectosEmocionales()
-        self.audio_emocional = AudioEmocional(habilitar_audio=habilitar_audio)
         self.animador = AnimadorEmocional()
         self.animacion_continua = AnimacionContinua()
         self.narrativa = NarrativaDinamica()
@@ -54,12 +46,6 @@ class GameCuboFase5(GameCuboFase4):
 
         # Estado emocional anterior para detectar cambios
         self.emocion_anterior = None
-
-        # Guardar dificultad para música
-        self.difficulty = difficulty
-
-        # Iniciar música según dificultad del nivel
-        self.audio_emocional.reproducir_musica_por_dificultad(difficulty)
 
         # Mensaje de bienvenida
         self.narrativa.mostrar_dialogo("tutorial_emociones", "sistema", duracion=4.0)
@@ -109,13 +95,9 @@ class GameCuboFase5(GameCuboFase4):
         if bonus > 0:
             self.player.add_score(bonus)
             self.narrativa.reaccionar_evento("combo_alcanzado")
-            self.audio_emocional.evento_juego("combo_alcanzado")
 
     def _on_cambio_emocion(self, nueva_emocion: str):
         """Maneja el cambio de emoción"""
-        # Actualizar música
-        self.audio_emocional.actualizar_emocion(nueva_emocion)
-
         # Mostrar diálogo contextual
         if nueva_emocion in ["feliz", "determinado"]:
             self.narrativa.reaccionar_emocion(nueva_emocion, "inicio")
@@ -132,7 +114,6 @@ class GameCuboFase5(GameCuboFase4):
             # Nivel completado
             self.animador.iniciar_animacion("celebracion_exito")
             self.narrativa.reaccionar_evento("nivel_completado")
-            self.audio_emocional.evento_juego("nivel_completado")
             self.efectos_emocionales.evento_especial(
                 "exito", (self.cubo.x, self.cubo.y)
             )
@@ -140,14 +121,12 @@ class GameCuboFase5(GameCuboFase4):
             # Nivel fallido
             self.animador.iniciar_animacion("abatimiento_fracaso")
             self.narrativa.reaccionar_evento("nivel_fallido")
-            self.audio_emocional.evento_juego("nivel_fallido")
 
     def _manejar_evento_meteoro(self, impacto: bool):
         """Maneja eventos relacionados con meteoros (override de Fase 4)"""
         if impacto:
             # Daño recibido
             self.narrativa.reaccionar_emocion("dolor", "inicio")
-            self.audio_emocional.evento_juego("dano_recibido")
             self.efectos_emocionales.evento_especial("dano", (self.cubo.x, self.cubo.y))
             self.animador.iniciar_animacion("sacudida_dolor")
         else:
@@ -158,19 +137,16 @@ class GameCuboFase5(GameCuboFase4):
     def _manejar_evento_powerup(self, tipo_powerup: str):
         """Maneja eventos al recoger power-ups (override de Fase 4)"""
         self.narrativa.reaccionar_evento("powerup_obtenido")
-        self.audio_emocional.evento_juego("powerup_obtenido")
         self.efectos_emocionales.evento_especial("powerup", (self.cubo.x, self.cubo.y))
 
     def _manejar_evento_portal(self):
         """Maneja eventos al usar portales (override de Fase 4)"""
         self.narrativa.reaccionar_evento("portal_usado")
-        self.audio_emocional.evento_juego("portal_usado")
 
     def _manejar_uso_pista(self):
         """Maneja el uso de pistas (override de Fase 3)"""
         super()._usar_pista() if hasattr(super(), "_usar_pista") else None
         self.narrativa.reaccionar_evento("pista_usada")
-        self.audio_emocional.evento_juego("pista_usada")
 
     def draw(self):
         """Dibuja todo el estado del juego con efectos emocionales"""
@@ -234,7 +210,6 @@ class GameCuboFase5(GameCuboFase4):
 
     def on_pieza_colocada(self):
         """Callback cuando se coloca una pieza correctamente"""
-        self.audio_emocional.evento_juego("pieza_colocada")
         # Multiplicar puntos por combo
         puntos_base = 10  # Puntos por pieza
         puntos_con_combo = self.combo.aplicar_multiplicador(puntos_base)
@@ -258,29 +233,17 @@ class GameCuboFase5(GameCuboFase4):
         """Limpia recursos al salir del nivel"""
         super().limpiar() if hasattr(super(), "limpiar") else None
 
-        # Detener audio
-        self.audio_emocional.limpiar()
-
         # Limpiar otros sistemas
         self.efectos_emocionales.limpiar()
         self.narrativa.limpiar()
         self.combo.reiniciar()
         self.ambiente.limpiar()
 
-    def pausar(self):
-        """Pausa el juego"""
-        self.audio_emocional.pausar_musica()
-
-    def reanudar(self):
-        """Reanuda el juego"""
-        self.audio_emocional.reanudar_musica()
-
     def obtener_estadisticas_fase5(self) -> dict:
         """Obtiene estadísticas de la fase 5"""
         return {
             "combo_maximo": self.combo.combo_maximo_alcanzado,
             "bonus_total_combos": self.combo.total_bonus_obtenido,
-            "audio_habilitado": self.audio_emocional.habilitado,
             "emocion_actual": (
                 self.cubo.emocion if hasattr(self.cubo, "emocion") else "neutral"
             ),
