@@ -278,23 +278,23 @@ class GeneradorMeteoros:
             nivel: Número de nivel (1-3)
         """
         if nivel == 1:
-            # Nivel 1: Meteoros poco frecuentes y lentos
-            self.intervalo_min = 6.0  # segundos
-            self.intervalo_max = 10.0
-            self.velocidad_min = 180
-            self.velocidad_max = 250
+            # Nivel 1: Meteoros con frecuencia moderada
+            self.intervalo_min = 5.0  # segundos
+            self.intervalo_max = 8.0
+            self.velocidad_min = 200
+            self.velocidad_max = 270
         elif nivel == 2:
-            # Nivel 2: Frecuencia media y velocidad moderada
-            self.intervalo_min = 4.0
-            self.intervalo_max = 7.0
-            self.velocidad_min = 220
-            self.velocidad_max = 300
+            # Nivel 2: Frecuencia alta y velocidad rápida
+            self.intervalo_min = 3.0
+            self.intervalo_max = 5.5
+            self.velocidad_min = 250
+            self.velocidad_max = 330
         else:  # nivel == 3
-            # Nivel 3: Alta frecuencia y velocidad rápida
-            self.intervalo_min = 2.5
-            self.intervalo_max = 5.0
-            self.velocidad_min = 280
-            self.velocidad_max = 350
+            # Nivel 3: Frecuencia muy alta y velocidad muy rápida
+            self.intervalo_min = 2.0
+            self.intervalo_max = 4.0
+            self.velocidad_min = 300
+            self.velocidad_max = 380
 
     def establecer_zonas_prohibidas(self, posiciones):
         """

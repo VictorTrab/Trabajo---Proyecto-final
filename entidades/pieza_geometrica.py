@@ -369,11 +369,6 @@ class FiguraObjetivo:
 
     def draw(self, screen, alpha=100):
         """Dibuja la figura objetivo como silueta semitransparente"""
-        # Título
-        fuente = pygame.font.Font(None, 24)
-        texto = fuente.render("OBJETIVO:", True, (255, 255, 255))
-        screen.blit(texto, (self.x - texto.get_width() // 2, self.y - 120))
-
         # Dibujar cada pieza esperada como silueta
         for pieza_esperada in self.piezas_esperadas:
             tipo = pieza_esperada["tipo"]
@@ -445,13 +440,6 @@ class FiguraObjetivo:
             # Dibujar en pantalla
             rect = superficie.get_rect(center=(int(px), int(py)))
             screen.blit(superficie, rect)
-
-            # Etiqueta de posición
-            fuente_pequena = pygame.font.Font(None, 16)
-            etiqueta = fuente_pequena.render(
-                pieza_esperada["posicion"], True, (255, 255, 255)
-            )
-            screen.blit(etiqueta, (px - etiqueta.get_width() // 2, py + 30))
 
     def verificar_completitud(self, piezas_colocadas):
         """

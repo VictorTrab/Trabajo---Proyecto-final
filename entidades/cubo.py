@@ -221,11 +221,15 @@ class Cubo:
         self.position += self.velocity
 
         # Mantener dentro de los límites
+        # Límites horizontales
         self.position[0] = max(
             self.size / 2, min(SCREEN_WIDTH - self.size / 2, self.position[0])
         )
+        # Límites verticales - con restricción en la barra superior (primeros 100 píxeles)
+        margen_superior = 100  # Altura de la barra superior del HUD
         self.position[1] = max(
-            self.size / 2, min(SCREEN_HEIGHT - self.size / 2, self.position[1])
+            margen_superior + self.size / 2,
+            min(SCREEN_HEIGHT - self.size / 2, self.position[1]),
         )
 
         # Actualizar animaciones

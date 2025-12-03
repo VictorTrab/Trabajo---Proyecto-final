@@ -150,6 +150,14 @@ class GameManager:
             # Dibujar estado actual
             self.current_state.draw(self.screen)
 
+            # Dibujar contador de FPS en la esquina inferior derecha
+            fps_actual = self.clock.get_fps()
+            font_fps = pygame.font.Font(None, 30)
+            fps_text = font_fps.render(f"FPS: {int(fps_actual)}", True, NEON_GREEN)
+            fps_rect = fps_text.get_rect()
+            fps_rect.bottomright = (SCREEN_WIDTH - 10, SCREEN_HEIGHT - 10)
+            self.screen.blit(fps_text, fps_rect)
+
             # Actualizar pantalla
             pygame.display.flip()
             self.clock.tick(FPS)

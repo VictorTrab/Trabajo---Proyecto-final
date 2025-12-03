@@ -624,9 +624,9 @@ class GameCuboFase3(GameCuboFase2):
         panel_x = (SCREEN_WIDTH - panel_width) // 2
         panel_y = (SCREEN_HEIGHT - panel_height) // 2
 
-        # Fondo del panel
+        # Fondo del panel (opaco para ocultar elementos del juego)
         s = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
-        pygame.draw.rect(s, (0, 0, 0, 230), s.get_rect(), border_radius=20)
+        pygame.draw.rect(s, (0, 0, 0, 255), s.get_rect(), border_radius=20)
         pygame.draw.rect(s, NEON_CYAN, s.get_rect(), 3, border_radius=20)
         self.screen.blit(s, (panel_x, panel_y))
 

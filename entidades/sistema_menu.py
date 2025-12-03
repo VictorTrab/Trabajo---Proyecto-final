@@ -230,7 +230,7 @@ class Menu:
         self.draw_3d_pulse_title("CUBO", 240, NEON_PINK, (SCREEN_WIDTH // 2, 150))
 
         # Opciones del menú
-        options = ["Jugar", "Niveles", "Perfil", "Acerca de", "Salir"]
+        options = ["Jugar", "Niveles", "Perfil de Jugador", "Acerca de", "Salir"]
         for i, option in enumerate(options):
             color = NEON_CYAN if i == self.selected_option else NEON_PURPLE
             y_pos = 300 + i * 70
@@ -272,7 +272,7 @@ class Menu:
 
         # Instrucciones
         instructions = self.font_small.render(
-            "Usa ↑↓ para navegar, ENTER para seleccionar", True, NEON_GREEN
+            "Usa las flechas para navegar, ENTER para seleccionar", True, NEON_GREEN
         )
         inst_rect = instructions.get_rect(center=(SCREEN_WIDTH // 2, 700))
         self.screen.blit(instructions, inst_rect)
@@ -370,7 +370,7 @@ class Menu:
 
         # Instrucciones actualizadas para navegación en cuadrícula
         instructions = self.font_small.render(
-            "Usa ←→↑↓ para navegar, ENTER para seleccionar, ESC para volver",
+            "Usa las flechas para navegar, ENTER para seleccionar, ESC para volver",
             True,
             NEON_GREEN,
         )
@@ -638,10 +638,10 @@ class Menu:
         y_offset += 45
 
         features = [
-            "✦ 3 Niveles de dificultad progresiva",
-            "✦ Sistema de transformaciones geométricas",
-            "✦ Mecánicas de física y colisiones",
-            "✦ Sistema de puntuación y mejores tiempos",
+            " 3 Niveles de dificultad progresiva",
+            " Sistema de transformaciones geométricas",
+            " Mecánicas de física y colisiones",
+            " Sistema de puntuación y mejores tiempos",
         ]
 
         left_x = panel_x + 80
