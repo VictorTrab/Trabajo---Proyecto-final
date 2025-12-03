@@ -66,14 +66,21 @@ class GameManager:
         """Cambia el estado actual del juego"""
         if state_name in self.states:
             self.current_state = self.states[state_name]
+        else:
+            print(f"[WARNING] Estado '{state_name}' no existe")
 
     def draw_transition_screen_impl(self):
         """Dibuja la pantalla de transicion con efecto blur"""
-        if not self.transition_data:
+        if not self.transition_data or not isinstance(self.transition_data, dict):
             return
 
-        # Dibujar snapshot con blur (usando escala para simular blur)
+        # Validar que snapshot existe y es válido
+        if "snapshot" not in self.transition_data:
+            return
+
         snapshot = self.transition_data["snapshot"]
+        if snapshot is None:
+            return
 
         # Crear efecto blur escalando hacia abajo y luego hacia arriba
         blur_size = (SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4)
@@ -111,14 +118,6 @@ class GameManager:
                     self.screen.blit(glow_text, (title_rect.x + dx, title_rect.y + dy))
 
             self.screen.blit(title_text, title_rect)
-
-            # Mensaje
-            font_msg = pygame.font.Font(None, 50)
-            msg_text = font_msg.render(
-                "¡Te has quedado sin intentos!", True, NEON_ORANGE
-            )
-            msg_rect = msg_text.get_rect(center=(SCREEN_WIDTH // 2, 320))
-            self.screen.blit(msg_text, msg_rect)
 
             # Opciones
             font_options = pygame.font.Font(None, 45)

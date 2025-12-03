@@ -3,19 +3,23 @@
     "levels_completed": {
         "1": true,
         "2": true,
-        "3": false
+        "3": true
     },
     "best_scores": {
         "1": {
             "attempts": 0,
-            "time": 14.925024509429932
+            "time": 18.611868858337402
         },
         "2": {
             "attempts": 0,
-            "time": 37.488669872283936
+            "time": 61.99199318885803
         },
-        "3": null
+        "3": {
+            "attempts": 0,
+            "time": 26.020254611968994
+        }
     },
-    "total_levels_completed": 2,
-    "unlocked_levels": 3
+    "total_levels_completed": 3,
+    "unlocked_levels": 3,
+    "last_level_played": 3
 }

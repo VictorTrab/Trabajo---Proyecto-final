@@ -145,28 +145,29 @@ class Meteoro:
 
     def _dibujar_advertencia(self, screen):
         """Dibuja la advertencia visual antes de que caiga el meteoro"""
-        # Pulso visual
-        pulso = abs(math.sin(self.advertencia_timer * 10)) * 20 + 10
+        # Pulso visual más sutil
+        pulso = abs(math.sin(self.advertencia_timer * 8)) * 8 + 5
 
-        # Línea vertical de advertencia
+        # Línea vertical de advertencia más tenue
         pygame.draw.line(
             screen,
-            (255, 255, 0, 150),
+            (200, 200, 0, 100),
             (self.x, 0),
             (self.x, SCREEN_HEIGHT),
-            int(pulso // 2),
+            max(1, int(pulso // 3)),
         )
 
-        # Zona de impacto
-        zona_radio = self.tamano + pulso
+        # Zona de impacto más pequeña y tenue
+        zona_radio = self.tamano + pulso // 2
         pygame.draw.circle(
-            screen, (255, 255, 0), (int(self.x), SCREEN_HEIGHT - 50), int(zona_radio), 3
+            screen, (200, 200, 0), (int(self.x), SCREEN_HEIGHT - 50), int(zona_radio), 1
         )
 
-        # Símbolo de peligro en la parte superior
-        font = pygame.font.Font(None, 40)
-        texto = font.render("⚠", True, (255, 255, 0))
-        screen.blit(texto, (self.x - 10, 20))
+        # Símbolo de peligro más pequeño y solo en la primera mitad
+        if self.advertencia_timer > 0.5:
+            font = pygame.font.Font(None, 28)
+            texto = font.render("⚠", True, (200, 200, 0))
+            screen.blit(texto, (self.x - 8, 20))
 
     def _dibujar_estela(self, screen):
         """Dibuja la estela de fuego detrás del meteoro"""
@@ -223,6 +224,10 @@ class Meteoro:
         if not self.activo or self.advertencia_activa or self.impactado:
             return False
 
+        # Validar que el objeto tenga atributos necesarios
+        if not hasattr(objeto, "x") or not hasattr(objeto, "y"):
+            return False
+
         # Obtener radio del objeto
         if hasattr(objeto, "radio"):
             radio_obj = objeto.radio
@@ -231,13 +236,14 @@ class Meteoro:
         else:
             radio_obj = 20  # Radio por defecto
 
-        # Distancia entre centros
+        # Distancia entre centros (evitar sqrt si no es necesario)
         dx = self.x - objeto.x
         dy = self.y - objeto.y
-        distancia = math.sqrt(dx * dx + dy * dy)
+        distancia_sq = dx * dx + dy * dy
+        radio_sum = self.radio + radio_obj
 
-        # Verificar si hay colisión
-        return distancia < (self.radio + radio_obj)
+        # Comparar distancia al cuadrado para evitar sqrt innecesario
+        return distancia_sq < (radio_sum * radio_sum)
 
     def impactar(self):
         """Marca el meteoro como impactado e inicia animación de explosión"""
@@ -249,19 +255,46 @@ class Meteoro:
 class GeneradorMeteoros:
     """Genera meteoros periódicamente"""
 
-    def __init__(self):
-        """Inicializa el generador de meteoros"""
+    def __init__(self, nivel=1):
+        """Inicializa el generador de meteoros
+
+        Args:
+            nivel: Número de nivel (1-3) para ajustar dificultad
+        """
         self.meteoros = []
         self.posiciones_prohibidas = []  # Lista de (x, y, radio) para evitar
+        self.nivel = nivel
 
-        # Configurar frecuencia
-        self.intervalo_min = 5.0  # segundos
-        self.intervalo_max = 8.0
-        self.velocidad_min = 200
-        self.velocidad_max = 300
+        # Configurar frecuencia según nivel
+        self._configurar_dificultad(nivel)
 
         self.tiempo_siguiente = random.uniform(self.intervalo_min, self.intervalo_max)
         self.tiempo_acumulado = 0
+
+    def _configurar_dificultad(self, nivel):
+        """Configura los parámetros de dificultad según el nivel
+
+        Args:
+            nivel: Número de nivel (1-3)
+        """
+        if nivel == 1:
+            # Nivel 1: Meteoros poco frecuentes y lentos
+            self.intervalo_min = 6.0  # segundos
+            self.intervalo_max = 10.0
+            self.velocidad_min = 180
+            self.velocidad_max = 250
+        elif nivel == 2:
+            # Nivel 2: Frecuencia media y velocidad moderada
+            self.intervalo_min = 4.0
+            self.intervalo_max = 7.0
+            self.velocidad_min = 220
+            self.velocidad_max = 300
+        else:  # nivel == 3
+            # Nivel 3: Alta frecuencia y velocidad rápida
+            self.intervalo_min = 2.5
+            self.intervalo_max = 5.0
+            self.velocidad_min = 280
+            self.velocidad_max = 350
 
     def establecer_zonas_prohibidas(self, posiciones):
         """

@@ -63,6 +63,8 @@ class Cubo:
         self.invulnerable = False
         self.invulnerabilidad_timer = 0
         self.respawn_timer = 0
+        self.impactos_recibidos = 0  # Contador de impactos directos
+        self.max_impactos = 2  # Máximo de impactos antes de ser destruido
 
         # Piezas transportadas
         self.pieza_sostenida = None
@@ -111,6 +113,10 @@ class Cubo:
 
     def atraer_pieza(self, pieza, zona_nombre):
         """Atrae una pieza a una zona específica de CUBO"""
+        # Validar que la zona exista
+        if zona_nombre not in self.zonas_atraccion:
+            return False
+
         if not self.zonas_atraccion[zona_nombre]["ocupada"]:
             self.zonas_atraccion[zona_nombre]["ocupada"] = True
             self.zonas_atraccion[zona_nombre]["pieza"] = pieza
@@ -126,7 +132,13 @@ class Cubo:
         if zona_nombre is None:
             zona_nombre = self.zona_pieza
 
-        if zona_nombre and self.zonas_atraccion[zona_nombre]["ocupada"]:
+        # Validar que la zona exista y esté ocupada
+        if (
+            zona_nombre
+            and zona_nombre in self.zonas_atraccion
+            and self.zonas_atraccion[zona_nombre]["ocupada"]
+        ):
+
             pieza = self.zonas_atraccion[zona_nombre]["pieza"]
             self.zonas_atraccion[zona_nombre]["ocupada"] = False
             self.zonas_atraccion[zona_nombre]["pieza"] = None
@@ -157,18 +169,49 @@ class Cubo:
         self.emocion_actual = nueva_emocion
         self.emocion_timer = duracion if duracion else self.emocion_duracion
 
+    def recibir_impacto(self):
+        """
+        Registra un impacto directo de meteoro
+
+        Returns:
+            bool: True si el cubo fue destruido, False si aún puede resistir
+        """
+        self.impactos_recibidos += 1
+        return self.impactos_recibidos >= self.max_impactos
+
+    def esta_destruido(self):
+        """
+        Verifica si el cubo ha sido destruido
+
+        Returns:
+            bool: True si recibió el máximo de impactos
+        """
+        return self.impactos_recibidos >= self.max_impactos
+
+    def resetear_impactos(self):
+        """Resetea el contador de impactos (para reiniciar nivel)"""
+        self.impactos_recibidos = 0
+
     def get_zona_mas_cercana(self, punto):
         """Devuelve la zona de atracción más cercana a un punto dado"""
+        # Validar que punto sea válido
+        if punto is None or len(punto) < 2:
+            return None, float("inf")
+
         min_dist = float("inf")
         zona_cercana = None
 
         for nombre, zona in self.zonas_atraccion.items():
             if not zona["ocupada"]:
-                zona_pos = self.position + np.array(zona["offset"])
-                dist = np.linalg.norm(zona_pos - np.array(punto))
-                if dist < min_dist:
-                    min_dist = dist
-                    zona_cercana = nombre
+                try:
+                    zona_pos = self.position + np.array(zona["offset"])
+                    punto_array = np.array(punto)
+                    dist = np.linalg.norm(zona_pos - punto_array)
+                    if dist < min_dist:
+                        min_dist = dist
+                        zona_cercana = nombre
+                except (ValueError, TypeError):
+                    continue
 
         return zona_cercana, min_dist
 

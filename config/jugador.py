@@ -18,6 +18,7 @@ class Player:
         self.best_scores = {i: None for i in range(1, TOTAL_LEVELS + 1)}
         self.total_levels_completed = 0
         self.unlocked_levels = 1  # Solo el nivel 1 está desbloqueado al inicio
+        self.last_level_played = 1  # Último nivel jugado
 
     def complete_level(self, level_number, attempts_used, time_used):
         """Marca un nivel como completado y actualiza estadísticas"""
@@ -49,8 +50,10 @@ class Player:
                         "time": time_used,
                     }
 
-            # Desbloquear siguiente nivel
-            self.unlocked_levels = max(self.unlocked_levels, level_number + 1)
+            # Desbloquear siguiente nivel (sin exceder el máximo)
+            self.unlocked_levels = min(
+                max(self.unlocked_levels, level_number + 1), TOTAL_LEVELS
+            )
 
             # Actualizar total
             self.total_levels_completed = sum(self.levels_completed.values())
@@ -72,16 +75,35 @@ class Player:
 
     def save(self):
         """Guarda el progreso del jugador en un archivo JSON"""
-        data = {
-            "name": self.name,
-            "levels_completed": {str(k): v for k, v in self.levels_completed.items()},
-            "best_scores": {str(k): v for k, v in self.best_scores.items()},
-            "total_levels_completed": self.total_levels_completed,
-            "unlocked_levels": self.unlocked_levels,
-        }
+        # Validar datos antes de guardar
+        try:
+            data = {
+                "name": str(self.name) if self.name else "Jugador",
+                "levels_completed": {
+                    str(k): bool(v) for k, v in self.levels_completed.items()
+                },
+                "best_scores": {str(k): v for k, v in self.best_scores.items()},
+                "total_levels_completed": (
+                    int(self.total_levels_completed)
+                    if self.total_levels_completed
+                    else 0
+                ),
+                "unlocked_levels": (
+                    int(self.unlocked_levels) if self.unlocked_levels else 1
+                ),
+                "last_level_played": (
+                    int(self.last_level_played) if self.last_level_played else 1
+                ),
+            }
+        except (ValueError, TypeError) as e:
+            print(f"Error al preparar datos para guardar: {e}")
+            return False
 
         try:
-            with open(SAVE_FILE, "w") as f:
+            # Crear directorio si no existe
+            os.makedirs(os.path.dirname(SAVE_FILE), exist_ok=True)
+
+            with open(SAVE_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
             return True
         except Exception as e:
@@ -95,8 +117,13 @@ class Player:
             return Player()
 
         try:
-            with open(SAVE_FILE, "r") as f:
+            with open(SAVE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
+            # Validar que data sea un diccionario
+            if not isinstance(data, dict):
+                print("Error: archivo de guardado corrupto")
+                return Player()
 
             player = Player(data.get("name", "Jugador"))
 
@@ -117,6 +144,7 @@ class Player:
 
             player.total_levels_completed = data.get("total_levels_completed", 0)
             player.unlocked_levels = data.get("unlocked_levels", 1)
+            player.last_level_played = data.get("last_level_played", 1)
 
             # Asegurar que todos los niveles existan
             for i in range(1, TOTAL_LEVELS + 1):
@@ -126,6 +154,15 @@ class Player:
                     player.best_scores[i] = None
 
             return player
+        except json.JSONDecodeError:
+            print(f"[Player] Save file corrupto, creando nuevo jugador")
+            return Player()
+        except PermissionError:
+            print(f"[Player] Sin permisos para leer save file")
+            return Player()
+        except UnicodeDecodeError:
+            print(f"[Player] Error de codificación en save file")
+            return Player()
         except Exception as e:
             print(f"Error al cargar: {e}")
             return Player()

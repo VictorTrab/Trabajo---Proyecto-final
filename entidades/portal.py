@@ -72,7 +72,7 @@ class Portal:
         for i in range(num_anillos):
             radio_anillo = self.radio + i * 12 + self.pulso
             grosor = 3 - i
-            alpha = 150 - i * 40
+            alpha = max(0, min(255, 150 - i * 40))  # Clamping para evitar overflow
 
             # Crear superficie con alpha
             anillo_surf = pygame.Surface(

@@ -33,6 +33,20 @@ class Menu:
         # Animación de opciones del menú
         self.menu_option_time = 0
 
+        # OPTIMIZACIÓN #1: Caché de fuentes por tamaño
+        self.font_cache = {}
+
+        # OPTIMIZACIÓN #2: Pre-cálculo de ángulos de hexágono
+        self.hexagon_angles = [i * np.pi / 3 for i in range(6)]
+        self.hexagon_cos = [np.cos(angle) for angle in self.hexagon_angles]
+        self.hexagon_sin = [np.sin(angle) for angle in self.hexagon_angles]
+
+    def get_font(self, size):
+        """Obtiene una fuente del caché o la crea si no existe (OPTIMIZACIÓN)"""
+        if size not in self.font_cache:
+            self.font_cache[size] = pygame.font.Font(None, size)
+        return self.font_cache[size]
+
     def draw_animated_background(self):
         """Dibuja teselado animado con efecto respiración y onda al cursor"""
         # Limpiar pantalla completamente primero
@@ -87,13 +101,12 @@ class Menu:
                 self.draw_hexagon(x, y, hex_size * 0.5, color, border_color)
 
     def draw_hexagon(self, cx, cy, radius, color, border_color):
-        """Dibuja un hexágono con borde neón"""
-        points = []
-        for i in range(6):
-            angle = i * np.pi / 3
-            x = cx + radius * np.cos(angle)
-            y = cy + radius * np.sin(angle)
-            points.append((x, y))
+        """Dibuja un hexágono con borde neón (optimizado)"""
+        # OPTIMIZACIÓN: Usar ángulos pre-calculados
+        points = [
+            (cx + radius * self.hexagon_cos[i], cy + radius * self.hexagon_sin[i])
+            for i in range(6)
+        ]
 
         # Asegurar que los colores sean válidos
         color = tuple(int(max(0, min(255, c))) for c in color)
@@ -114,9 +127,9 @@ class Menu:
         # Rotación más suave
         self.title_rotation = np.sin(self.title_pulse_time * 0.7) * 2.5  # ±2.5 grados
 
-        # Crear fuente escalada
+        # Crear fuente escalada (OPTIMIZADA: usar caché)
         scaled_size = int(base_font_size * self.title_scale)
-        scaled_font = pygame.font.Font(None, scaled_size)
+        scaled_font = self.get_font(scaled_size)
 
         # Renderizar texto principal
         text_surface = scaled_font.render(text, True, color)
@@ -227,7 +240,7 @@ class Menu:
                 # Efecto de pulso en la opción seleccionada
                 scale_pulse = 1.0 + np.sin(self.menu_option_time + i * 0.5) * 0.08
                 scaled_size = int(50 * scale_pulse)
-                scaled_font = pygame.font.Font(None, scaled_size)
+                scaled_font = self.get_font(scaled_size)  # OPTIMIZADO: usar caché
 
                 # Renderizar texto con escala
                 text_surface = scaled_font.render(option, True, color)
@@ -509,7 +522,7 @@ class Menu:
                 color = NEON_GREEN if i == 0 else NEON_PINK
                 size = 30
 
-            option_font = pygame.font.Font(None, size)
+            option_font = self.get_font(size)  # OPTIMIZADO
             option_text = option_font.render(option, True, color)
 
             x_pos = SCREEN_WIDTH // 2 - 200 if i == 0 else SCREEN_WIDTH // 2 + 200
@@ -543,9 +556,9 @@ class Menu:
         )
 
         # Panel de información
-        panel_y = 160
-        panel_width = 900
-        panel_height = 500
+        panel_y = 140
+        panel_width = 1000
+        panel_height = 580
         panel_x = (SCREEN_WIDTH - panel_width) // 2
 
         # Fondo del panel con transparencia
@@ -640,16 +653,16 @@ class Menu:
             else:
                 x_pos = right_x
 
-            y_pos = y_offset + (i % 2) * 35
+            y_pos = y_offset + (i % 2) * 40
 
             feature_text = self.font_small.render(feature, True, NEON_CYAN)
             self.screen.blit(feature_text, (x_pos, y_pos))
 
-        y_offset += 90
+        y_offset += 95
 
         # Copyright
         copyright_text = self.font_small.render(
-            "© 2025 - Todos los derechos reservados", True, NEON_PURPLE
+            "© 2025 V.H & R.M - Todos los derechos reservados", True, NEON_PURPLE
         )
         copyright_rect = copyright_text.get_rect(center=(SCREEN_WIDTH // 2, y_offset))
         self.screen.blit(copyright_text, copyright_rect)
@@ -700,7 +713,7 @@ class Menu:
             pygame.draw.circle(self.screen, NEON_CYAN, (corner_x, corner_y), 5)
 
         # Mensaje principal
-        message_font = pygame.font.Font(None, 48)
+        message_font = self.get_font(48)  # OPTIMIZADO
         message_surf = message_font.render(message, True, NEON_CYAN)
         message_rect = message_surf.get_rect(center=(SCREEN_WIDTH // 2, dialog_y + 80))
         self.screen.blit(message_surf, message_rect)
@@ -733,7 +746,7 @@ class Menu:
                 pygame.draw.rect(self.screen, color, button_rect, 2)
 
             # Texto de la opción
-            option_font = pygame.font.Font(None, 40)
+            option_font = self.get_font(40)  # OPTIMIZADO
             option_surf = option_font.render(option, True, color)
             option_rect = option_surf.get_rect(center=button_rect.center)
             self.screen.blit(option_surf, option_rect)
@@ -776,13 +789,13 @@ class Menu:
             pygame.draw.circle(self.screen, NEON_ORANGE, (corner_x, corner_y), 5)
 
         # Icono de advertencia
-        warning_font = pygame.font.Font(None, 80)
+        warning_font = self.get_font(80)  # OPTIMIZADO
         warning_icon = warning_font.render("⚠", True, NEON_ORANGE)
         warning_rect = warning_icon.get_rect(center=(SCREEN_WIDTH // 2, dialog_y + 60))
         self.screen.blit(warning_icon, warning_rect)
 
         # Mensaje principal
-        message_font = pygame.font.Font(None, 42)
+        message_font = self.get_font(42)  # OPTIMIZADO
         message_surf = message_font.render(
             "¿Reiniciar todo el progreso?", True, NEON_PINK
         )
@@ -827,7 +840,7 @@ class Menu:
                 pygame.draw.rect(self.screen, color, button_rect, 2)
 
             # Texto de la opción
-            option_font = pygame.font.Font(None, 30)
+            option_font = self.get_font(30)  # OPTIMIZADO
             option_surf = option_font.render(option, True, color)
             option_rect = option_surf.get_rect(center=button_rect.center)
             self.screen.blit(option_surf, option_rect)

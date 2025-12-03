@@ -28,7 +28,7 @@ class AudioSimple:
             "nivel1": "songs/Nivel1.mp3",
             "nivel2": "songs/Nivel2.mp3",
             "nivel3": "songs/Nivel3.mp3",
-            "completado": "songs/SongJugarNivel.mp3",
+            "completado": "songs/SongGameStart.mp3",
             "game_over": "songs/SongGameOver.mp3",
             "creditos": "songs/SongCreditos.mp3",
             "inicio_juego": "songs/SongGameStart.mp3",
@@ -42,7 +42,7 @@ class AudioSimple:
             "error": "songs/SongColisionBordeVentana.mp3",
             "explosion": "songs/SongExplocion.mp3",
             "salir_nivel": "songs/SongSalirDeNivel.mp3",
-            "iniciar_nivel": "songs/SongJugarNivel.mp3",
+            "iniciar_nivel": "songs/SongGameStart.mp3",
         }
 
         # Caché de efectos cargados
@@ -78,6 +78,10 @@ class AudioSimple:
         if not self.habilitado or not self.inicializado:
             return
 
+        # Verificar que mixer esté inicializado
+        if not pygame.mixer.get_init():
+            return
+
         # Si ya está sonando esta música, no hacer nada
         if self.musica_actual == tipo and pygame.mixer.music.get_busy():
             return
@@ -90,16 +94,17 @@ class AudioSimple:
             # Detener música actual
             if pygame.mixer.music.get_busy():
                 pygame.mixer.music.stop()
-                pygame.time.wait(50)
 
-            # Cargar y reproducir
+            # Cargar y reproducir con validación
             pygame.mixer.music.load(ruta)
             pygame.mixer.music.play(-1)  # Loop infinito
             pygame.mixer.music.set_volume(self.volumen_musica)
 
             self.musica_actual = tipo
         except pygame.error as e:
-            print(f"[AudioSimple] Error al reproducir música: {e}")
+            print(f"[AudioSimple] Error al reproducir música '{tipo}': {e}")
+            print(f"[AudioSimple] El archivo puede estar corrupto: {ruta}")
+            self.musica_actual = None
 
     def reproducir_efecto(self, nombre):
         """
@@ -123,13 +128,15 @@ class AudioSimple:
                 sonido = pygame.mixer.Sound(ruta)
                 sonido.set_volume(self.volumen_efectos)
                 self.efectos_cargados[nombre] = sonido
-            except pygame.error:
+            except pygame.error as e:
+                print(f"[AudioSimple] Error al cargar efecto '{nombre}': {e}")
+                print(f"[AudioSimple] El archivo puede estar corrupto: {ruta}")
                 return
 
         try:
             sonido.play()
-        except pygame.error:
-            pass
+        except pygame.error as e:
+            print(f"[AudioSimple] Error al reproducir efecto '{nombre}': {e}")
 
     def reproducir_musica_nivel(self, nivel_numero):
         """
@@ -143,13 +150,13 @@ class AudioSimple:
 
     def detener_musica(self):
         """Detiene la música actual"""
-        if self.habilitado and self.inicializado:
+        if self.habilitado and self.inicializado and pygame.mixer.get_init():
             pygame.mixer.music.stop()
             self.musica_actual = None
 
     def pausar_musica(self):
-        """Pausa la música"""
-        if self.habilitado and self.inicializado:
+        """Pausa la música actual"""
+        if self.habilitado and self.inicializado and pygame.mixer.get_init():
             pygame.mixer.music.pause()
 
     def reanudar_musica(self):

@@ -32,7 +32,7 @@ class GameCuboFase4(GameCuboFase3):
         """
         # Crear sistemas de Fase 4 ANTES de llamar a super().__init__()
         # porque _generar_piezas_para_objetivo() se llama en Fase2.__init__()
-        self.generador_meteoros = GeneradorMeteoros()
+        self.generador_meteoros = GeneradorMeteoros(nivel=level_number)
         self.sistema_portales = SistemaPortales(num_pares=2)  # 2 pares de portales
         self.sistema_powerups = SistemaPowerUps()
 
@@ -160,7 +160,7 @@ class GameCuboFase4(GameCuboFase3):
         # Verificar colisiones con meteoros
         self._verificar_colisiones_meteoros()
 
-        # Verificar teletransportaciones por portales
+        # Verificar teletransporte por portales
         self._verificar_teletransportaciones()
 
         # Verificar recolección de power-ups
@@ -171,6 +171,13 @@ class GameCuboFase4(GameCuboFase3):
 
     def _verificar_colisiones_meteoros(self):
         """Verifica colisiones de meteoros con CUBO y piezas"""
+        # Validar que existan los objetos necesarios
+        if not hasattr(self, "cubo") or not hasattr(self, "piezas"):
+            return
+
+        if not hasattr(self, "generador_meteoros"):
+            return
+
         # Crear lista de objetos a verificar
         objetos = [self.cubo] + self.piezas
 
@@ -194,31 +201,58 @@ class GameCuboFase4(GameCuboFase3):
                 else:
                     # Recibir daño
                     self.daño_recibido += 1
-                    self.cubo.cambiar_emocion(Cubo.EMOCION_DOLOR, 2.0)
 
-                    # Soltar pieza si la tiene
-                    for zona in self.cubo.zonas_atraccion.values():
-                        if zona["ocupada"]:
-                            pieza = zona["pieza"]
-                            pieza.siendo_arrastrada = False
-                            zona["ocupada"] = False
-                            zona["pieza"] = None
+                    # Validar que cubo tenga el método recibir_impacto
+                    if hasattr(self.cubo, "recibir_impacto"):
+                        cubo_destruido = self.cubo.recibir_impacto()
+                    else:
+                        cubo_destruido = False
 
-                    # Efecto visual de impacto
-                    self.particle_system.emit_burst(
-                        self.cubo.x,
-                        self.cubo.y,
-                        color=NEON_ORANGE,
-                        count=30,
-                        spread=4.0,
-                    )
+                    if cubo_destruido:
+                        # CUBO destruido - Game Over
+                        self.cubo.cambiar_emocion(Cubo.EMOCION_DOLOR, 3.0)
+                        self.failed = True
+
+                        # Efecto visual de destrucción masiva
+                        for i in range(5):
+                            self.particle_system.emit_burst(
+                                self.cubo.x,
+                                self.cubo.y,
+                                color=NEON_PINK if i % 2 == 0 else NEON_ORANGE,
+                                count=50,
+                                spread=5.0,
+                            )
+                    else:
+                        # Aún puede resistir
+                        self.cubo.cambiar_emocion(Cubo.EMOCION_DOLOR, 2.0)
+
+                        # Soltar pieza si la tiene
+                        for zona in self.cubo.zonas_atraccion.values():
+                            if zona["ocupada"]:
+                                pieza = zona["pieza"]
+                                pieza.siendo_arrastrada = False
+                                zona["ocupada"] = False
+                                zona["pieza"] = None
+
+                        # Efecto visual de impacto
+                        self.particle_system.emit_burst(
+                            self.cubo.x,
+                            self.cubo.y,
+                            color=NEON_ORANGE,
+                            count=30,
+                            spread=4.0,
+                        )
             else:
                 # Impacto en pieza
-                if not objeto.colocada:
+                if hasattr(objeto, "colocada") and not objeto.colocada:
                     # Empujar pieza
-                    dx = objeto.x - meteoro.x
-                    dy = objeto.y - meteoro.y
-                    objeto.aplicar_velocidad(dx * 2, dy * 2)
+                    if hasattr(objeto, "x") and hasattr(objeto, "y"):
+                        dx = objeto.x - meteoro.x
+                        dy = objeto.y - meteoro.y
+
+                        # Validar que tenga método aplicar_velocidad
+                        if hasattr(objeto, "aplicar_velocidad"):
+                            objeto.aplicar_velocidad(dx * 2, dy * 2)
 
                     # Efecto de impacto
                     self.particle_system.emit_burst(

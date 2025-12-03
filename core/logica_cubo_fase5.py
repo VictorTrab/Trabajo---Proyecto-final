@@ -7,9 +7,7 @@ import pygame
 from core.logica_cubo_fase4 import GameCuboFase4
 from entidades.efectos_emocionales import EfectosEmocionales
 from entidades.animaciones_emocionales import AnimadorEmocional, AnimacionContinua
-from entidades.narrativa_dinamica import NarrativaDinamica
-from entidades.combo_emocional import ComboEmocional, VisualizadorCombo
-from entidades.ambiente_emocional import AmbienteEmocional, FondoDinamico
+from entidades.ambiente_emocional import AmbienteEmocional
 from config.constantes import *
 
 
@@ -34,22 +32,13 @@ class GameCuboFase5(GameCuboFase4):
         self.efectos_emocionales = EfectosEmocionales()
         self.animador = AnimadorEmocional()
         self.animacion_continua = AnimacionContinua()
-        self.narrativa = NarrativaDinamica()
-        self.combo = ComboEmocional()
-        self.visualizador_combo = VisualizadorCombo()
         self.ambiente = AmbienteEmocional()
-        self.fondo_dinamico = FondoDinamico()
 
         # Fuentes para narrativa
         self.fuente_narrativa = pygame.font.Font(None, 32)
-        self.fuente_combo_grande = pygame.font.Font(None, 48)
-        self.fuente_combo_pequena = pygame.font.Font(None, 24)
 
         # Estado emocional anterior para detectar cambios
         self.emocion_anterior = None
-
-        # Mensaje de bienvenida
-        self.narrativa.mostrar_dialogo("tutorial_emociones", "sistema", duracion=4.0)
 
     def update(self, dt=None):
         """Actualiza el estado del juego"""
@@ -87,24 +76,10 @@ class GameCuboFase5(GameCuboFase4):
         )
         self.animador.actualizar(dt)
         self.animacion_continua.actualizar(dt)
-        self.narrativa.actualizar(dt)
-        self.combo.actualizar(dt, emocion_actual)
         self.ambiente.actualizar(dt, emocion_actual)
-
-        # Aplicar bonos de combo a puntuación
-        bonus = self.combo.obtener_bonus_acumulado()
-        if bonus > 0:
-            self.player.add_score(bonus)
-            self.narrativa.reaccionar_evento("combo_alcanzado")
 
     def _on_cambio_emocion(self, nueva_emocion: str):
         """Maneja el cambio de emoción"""
-        # Mostrar diálogo contextual
-        if nueva_emocion in ["feliz", "determinado"]:
-            self.narrativa.reaccionar_emocion(nueva_emocion, "inicio")
-        elif nueva_emocion in ["triste", "miedo", "dolor"]:
-            self.narrativa.reaccionar_emocion(nueva_emocion, "inicio")
-
         # Animación especial al cambiar a determinación
         if nueva_emocion == "determinado":
             self.animador.iniciar_animacion("pulso_determinado")
@@ -114,40 +89,23 @@ class GameCuboFase5(GameCuboFase4):
         if resultado == "completado":
             # Nivel completado
             self.animador.iniciar_animacion("celebracion_exito")
-            self.narrativa.reaccionar_evento("nivel_completado")
             self.efectos_emocionales.evento_especial(
                 "exito", (self.cubo.x, self.cubo.y)
             )
         elif resultado == "fallido":
             # Nivel fallido
             self.animador.iniciar_animacion("abatimiento_fracaso")
-            self.narrativa.reaccionar_evento("nivel_fallido")
 
     def _manejar_evento_meteoro(self, impacto: bool):
         """Maneja eventos relacionados con meteoros (override de Fase 4)"""
         if impacto:
             # Daño recibido
-            self.narrativa.reaccionar_emocion("dolor", "inicio")
             self.efectos_emocionales.evento_especial("dano", (self.cubo.x, self.cubo.y))
             self.animador.iniciar_animacion("sacudida_dolor")
-        else:
-            # Meteoro esquivado
-            if self.meteoros_esquivados > 0 and self.meteoros_esquivados % 5 == 0:
-                self.narrativa.reaccionar_evento("meteoro_esquivado")
 
     def _manejar_evento_powerup(self, tipo_powerup: str):
         """Maneja eventos al recoger power-ups (override de Fase 4)"""
-        self.narrativa.reaccionar_evento("powerup_obtenido")
         self.efectos_emocionales.evento_especial("powerup", (self.cubo.x, self.cubo.y))
-
-    def _manejar_evento_portal(self):
-        """Maneja eventos al usar portales (override de Fase 4)"""
-        self.narrativa.reaccionar_evento("portal_usado")
-
-    def _manejar_uso_pista(self):
-        """Maneja el uso de pistas (override de Fase 3)"""
-        super()._usar_pista() if hasattr(super(), "_usar_pista") else None
-        self.narrativa.reaccionar_evento("pista_usada")
 
     def draw(self):
         """Dibuja todo el estado del juego con efectos emocionales"""
@@ -156,10 +114,10 @@ class GameCuboFase5(GameCuboFase4):
         )
 
         # 1. Dibujar fondo dinámico emocional
-        self.fondo_dinamico.dibujar_fondo_gradiente(self.screen, emocion_actual)
+        self.ambiente.dibujar_fondo(self.screen, emocion_actual)
 
         # 2. Dibujar partículas de ambiente de fondo
-        self.ambiente.dibujar_particulas_ambiente(self.screen)
+        self.ambiente.dibujar_particulas(self.screen)
 
         # 3. Dibujar elementos del juego (Fase 4 y anteriores) usando el método heredado
         super().draw()
@@ -171,23 +129,6 @@ class GameCuboFase5(GameCuboFase4):
         offset_x, offset_y = self.efectos_emocionales.aplicar_efectos_pantalla(
             self.screen, emocion_actual
         )
-
-        # 6. Aplicar clima emocional
-        self.ambiente.generar_efecto_clima(self.screen, emocion_actual)
-
-        # 7. Dibujar narrativa (diálogos)
-        self.narrativa.dibujar(self.screen, self.fuente_narrativa)
-
-        # 8. Dibujar combo
-        if self.combo.combo_activo:
-            pos_combo = (WINDOW_WIDTH - 100, 100)
-            self.visualizador_combo.dibujar(
-                self.screen,
-                self.combo,
-                pos_combo,
-                self.fuente_combo_grande,
-                self.fuente_combo_pequena,
-            )
 
     def _dibujar_elementos_juego(self):
         """Dibuja los elementos del juego de fases anteriores"""
@@ -211,12 +152,7 @@ class GameCuboFase5(GameCuboFase4):
 
     def on_pieza_colocada(self):
         """Callback cuando se coloca una pieza correctamente"""
-        # Multiplicar puntos por combo
-        puntos_base = 10  # Puntos por pieza
-        puntos_con_combo = self.combo.aplicar_multiplicador(puntos_base)
-        # Agregar diferencia de bonus
-        if puntos_con_combo > puntos_base:
-            self.player.add_score(puntos_con_combo - puntos_base)
+        pass
 
     def reiniciar_nivel(self):
         """Reinicia el nivel actual (limpia sistemas emocionales)"""
@@ -224,9 +160,6 @@ class GameCuboFase5(GameCuboFase4):
 
         # Limpiar sistemas de Fase 5
         self.efectos_emocionales.limpiar()
-        self.narrativa.limpiar()
-        self.combo.reiniciar()
-        self.visualizador_combo.reiniciar()
         self.ambiente.limpiar()
         self.animador.detener()
 
@@ -236,15 +169,11 @@ class GameCuboFase5(GameCuboFase4):
 
         # Limpiar otros sistemas
         self.efectos_emocionales.limpiar()
-        self.narrativa.limpiar()
-        self.combo.reiniciar()
         self.ambiente.limpiar()
 
     def obtener_estadisticas_fase5(self) -> dict:
         """Obtiene estadísticas de la fase 5"""
         return {
-            "combo_maximo": self.combo.combo_maximo_alcanzado,
-            "bonus_total_combos": self.combo.total_bonus_obtenido,
             "emocion_actual": (
                 self.cubo.emocion if hasattr(self.cubo, "emocion") else "neutral"
             ),

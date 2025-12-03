@@ -129,29 +129,35 @@ class PiezaGeometrica:
             self.offset_flotante = 0
             self.tiempo_flotante = 0
 
-        # Física simple si no está siendo arrastrada
+            # Física simple si no está siendo arrastrada
         if not self.siendo_arrastrada and not self.colocada:
-            self.x += self.velocidad_x
-            self.y += self.velocidad_y
-            self.velocidad_x *= self.friccion
-            self.velocidad_y *= self.friccion
+            # Validar valores numéricos antes de operar
+            if isinstance(self.velocidad_x, (int, float)) and isinstance(
+                self.velocidad_y, (int, float)
+            ):
+                self.x += self.velocidad_x
+                self.y += self.velocidad_y
+                self.velocidad_x *= self.friccion
+                self.velocidad_y *= self.friccion
 
-            # Límites de pantalla
-            if self.x < self.tamano // 2:
-                self.x = self.tamano // 2
-                self.velocidad_x *= -0.5
-            elif self.x > SCREEN_WIDTH - self.tamano // 2:
-                self.x = SCREEN_WIDTH - self.tamano // 2
-                self.velocidad_x *= -0.5
+                # Límites de pantalla con validación de tamaño
+                mitad_tamano = max(1, self.tamano // 2)
 
-            if self.y < self.tamano // 2:
-                self.y = self.tamano // 2
-                self.velocidad_y *= -0.5
-            elif self.y > SCREEN_HEIGHT - self.tamano // 2:
-                self.y = SCREEN_HEIGHT - self.tamano // 2
-                self.velocidad_y *= -0.5
+                if self.x < mitad_tamano:
+                    self.x = mitad_tamano
+                    self.velocidad_x *= -0.5
+                elif self.x > SCREEN_WIDTH - mitad_tamano:
+                    self.x = SCREEN_WIDTH - mitad_tamano
+                    self.velocidad_x *= -0.5
 
-            self.actualizar_rect()
+                if self.y < mitad_tamano:
+                    self.y = mitad_tamano
+                    self.velocidad_y *= -0.5
+                elif self.y > SCREEN_HEIGHT - mitad_tamano:
+                    self.y = SCREEN_HEIGHT - mitad_tamano
+                    self.velocidad_y *= -0.5
+
+                self.actualizar_rect()
 
     def draw(self, screen):
         """Dibuja la pieza en pantalla"""

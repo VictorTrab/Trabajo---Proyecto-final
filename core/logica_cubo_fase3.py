@@ -77,20 +77,7 @@ class SistemaPuntuacion:
             "puntos_total": puntos_total,
             "tiempo_usado": tiempo_usado,
             "intentos_fallidos": intentos_fallidos,
-            "estrellas": self._calcular_estrellas(puntos_total),
         }
-
-    def _calcular_estrellas(self, puntos):
-        """Calcula el número de estrellas (1-3) basado en la puntuación"""
-        # Umbrales fijos de puntuación
-        umbral_base = 1000
-
-        if puntos >= umbral_base * 1.5:
-            return 3  # Excelente
-        elif puntos >= umbral_base:
-            return 2  # Bueno
-        else:
-            return 1  # Completado
 
 
 class SistemaPistas:
@@ -608,6 +595,20 @@ class GameCuboFase3(GameCuboFase2):
             f"Pistas: {pistas_restantes}/3 (H/J)", True, color_pistas
         )
         self.screen.blit(texto_pistas, (20, y))
+        y += 25
+
+        # Vida del cubo (si tiene el sistema de impactos)
+        if hasattr(self.cubo, "impactos_recibidos"):
+            vida_restante = self.cubo.max_impactos - self.cubo.impactos_recibidos
+            color_vida = (
+                NEON_GREEN
+                if vida_restante >= 2
+                else NEON_ORANGE if vida_restante == 1 else NEON_PINK
+            )
+            texto_vida = self.font_small.render(
+                f"Vidas: {vida_restante}/{self.cubo.max_impactos}", True, color_vida
+            )
+            self.screen.blit(texto_vida, (20, y))
 
     def _dibujar_resultado_puntuacion(self):
         """Dibuja el resultado final de puntuación"""
@@ -636,14 +637,6 @@ class GameCuboFase3(GameCuboFase2):
         titulo_rect = texto_titulo.get_rect(center=(SCREEN_WIDTH // 2, y + 30))
         self.screen.blit(texto_titulo, titulo_rect)
         y += 80
-
-        # Estrellas
-        estrellas = resultado["estrellas"]
-        estrella_texto = "★" * estrellas + "☆" * (3 - estrellas)
-        texto_estrellas = self.font_large.render(estrella_texto, True, NEON_YELLOW)
-        estrellas_rect = texto_estrellas.get_rect(center=(SCREEN_WIDTH // 2, y))
-        self.screen.blit(texto_estrellas, estrellas_rect)
-        y += 60
 
         # Desglose de puntuación
         detalles = [
@@ -719,11 +712,6 @@ class GameCuboFase3(GameCuboFase2):
             "completado": self.completed,
             "puntuacion": (
                 self.resultado_puntuacion["puntos_total"]
-                if self.resultado_puntuacion
-                else 0
-            ),
-            "estrellas": (
-                self.resultado_puntuacion["estrellas"]
                 if self.resultado_puntuacion
                 else 0
             ),

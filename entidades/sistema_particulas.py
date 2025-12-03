@@ -187,7 +187,9 @@ class MovementTrailEffect:
                     self.emit_counter = 0
 
                     # Dirección normalizada inversa (hacia atrás)
-                    if distance > 0:
+                    if (
+                        distance > 0.001
+                    ):  # Proteger contra división por valores muy pequeños
                         direction = -delta / distance
                     else:
                         direction = np.array([0, 0])

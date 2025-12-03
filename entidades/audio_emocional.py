@@ -57,7 +57,7 @@ class AudioEmocional:
             "pieza_colocar": "songs/SongClick.mp3",
             "pieza_rotar": "songs/SongRotarFigura.mp3",
             "boton_click": "songs/SongClick.mp3",
-            "nivel_completado": "songs/SongJugarNivel.mp3",
+            "nivel_completado": "songs/SongGameStart.mp3",
             "nivel_fallido": "songs/SongGameOver.mp3",
             "cubo_colision": "songs/SongColisionBordeVentana.mp3",
             # Efectos que necesitan crearse (se marcarán como faltantes)

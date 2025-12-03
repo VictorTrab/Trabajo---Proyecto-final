@@ -65,7 +65,7 @@ SAVE_FILE = "config/player_save.json"
 
 # Información del juego
 GAME_VERSION = "3.6"
-GAME_AUTHORS = "V.H & R."
+GAME_AUTHORS = "V.H & R.M"
 GAME_LICENSE = "Uso Educativo"
 GAME_YEAR = "2025"
 GAME_PURPOSE = "Proyecto de informatica grafica"
@@ -87,34 +87,16 @@ COLOR_SUCCESS_GLOW = (50, 255, 50)  # Verde éxito
 COLOR_DANGER = (255, 50, 50)  # Rojo peligro
 COLOR_WARNING = (255, 165, 0)  # Naranja advertencia
 
-# Tipos de Zonas
-ZONE_TYPE_OBSTACLE = "obstacle"  # Zona prohibida (muerte o bloqueo)
-ZONE_TYPE_DISTORTION = "distortion"  # Altera escala/rotación
-ZONE_TYPE_GRAVITY = "gravity"  # Arrastra la figura
-
 # Configuración de Feedback Visual
-SHAKE_DECAY = 0.9  # Cuánto disminuye el temblor por frame
-MAX_SHAKE = 10.0  # Máximo desplazamiento en píxeles
 PROXIMITY_THRESHOLD = 50.0  # Distancia para empezar a brillar verde
 SAFE_ZONE_RADIUS = (
     150.0  # Radio de zona segura alrededor del objetivo (ignora obstáculos)
 )
 
-# Escalado y rotación suaves
-SCALE_LERP_FACTOR = 0.15  # Factor de interpolación para escalado suave (0.0 a 1.0)
-ROTATION_LERP_FACTOR = 0.2  # Factor de interpolación para rotación suave (0.0 a 1.0)
-
 # Configuración de objetivo dinámico
-MAX_TARGET_REPOSITIONS = 2  # Máximo número de veces que el objetivo cambia de posición
 TARGET_REPOSITION_INTERVAL = 30.0  # Intervalo en segundos para cambiar el objetivo
 
-# Configuración de obstáculos dinámicos
-OBSTACLE_SPEED_SLOW = 1.0  # Velocidad lenta de obstáculos
-OBSTACLE_SPEED_MEDIUM = 2.5  # Velocidad media
-OBSTACLE_SPEED_FAST = 4.0  # Velocidad rápida
-
 # Sistema de daño
-MAX_HEALTH = 100  # Vida máxima de la figura
 DAMAGE_PER_HIT = 25  # Daño por cada colisión con obstáculo
 HEALTH_REGEN_RATE = 5  # Regeneración de vida por segundo (cuando no hay colisión)
 DAMAGE_COOLDOWN = 1.0  # Tiempo en segundos entre daños (invulnerabilidad temporal)
@@ -142,8 +124,3 @@ DURACION_PISTA = 5.0  # Segundos que dura visible una pista
 UMBRAL_1_ESTRELLA = 0.5  # 50% de puntos base
 UMBRAL_2_ESTRELLAS = 1.0  # 100% de puntos base
 UMBRAL_3_ESTRELLAS = 1.5  # 150% de puntos base
-
-# Progresión de niveles
-MAX_NIVELES_FASE3 = 10  # Número máximo de niveles en Fase 3
-PIEZAS_MIN_POR_NIVEL = 2  # Mínimo de piezas en niveles iniciales
-PIEZAS_MAX_POR_NIVEL = 8  # Máximo de piezas en niveles avanzados

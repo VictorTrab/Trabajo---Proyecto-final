@@ -71,7 +71,7 @@ class GameCuboFase2:
         # Función auxiliar para obtener una posición no ocupada
         def obtener_posicion_libre():
             intentos = 0
-            while intentos < 100:  # Evitar bucle infinito
+            while intentos < 500:  # Aumentado de 100 a 500 para mejor distribución
                 x = random.randint(
                     margen, SCREEN_WIDTH - margen - 200
                 )  # Evitar zona del objetivo

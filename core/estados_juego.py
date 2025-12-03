@@ -1,9 +1,6 @@
 import pygame
 from config.constantes import *
-from core.logica_cubo_fase3 import GameCuboFase3
-from core.logica_cubo_fase4 import GameCuboFase4
 from core.logica_cubo_fase5 import GameCuboFase5
-from entidades.audio_simple import AudioSimple
 
 
 class GameState:
@@ -32,9 +29,35 @@ class MainMenuState(GameState):
         result = self.manager.menu.handle_input(event, 5)
         if result == "select":
             option = self.manager.menu.selected_option
-            if option == 0:  # Jugar
-                self.manager.change_state("level_select")
-                self.manager.menu.selected_option = 0
+            if option == 0:  # Jugar - ir al último nivel jugado
+                # Obtener el último nivel jugado del jugador (con validación)
+                if hasattr(self.manager.player, "last_level_played"):
+                    last_level = self.manager.player.last_level_played
+                else:
+                    last_level = 1
+
+                # Asegurar que sea un número válido
+                if not isinstance(last_level, int) or last_level < 1:
+                    last_level = 1
+
+                # Verificar que el nivel esté desbloqueado
+                if not self.manager.player.is_level_unlocked(last_level):
+                    last_level = 1  # Si no está desbloqueado, ir al nivel 1
+
+                self.manager.selected_level = last_level
+
+                # Crear instancia del juego directamente
+                self.manager.current_game = GameCuboFase5(
+                    self.manager.screen,
+                    self.manager.selected_level,
+                    self.manager.player,
+                    audio=self.manager.audio,
+                )
+
+                # Reproducir música del nivel correspondiente
+                self.manager.audio.reproducir_musica_nivel(last_level)
+
+                self.manager.change_state("playing")
             elif option == 1:  # Niveles
                 self.manager.change_state("level_select")
                 self.manager.menu.selected_option = 0
@@ -61,6 +84,10 @@ class LevelSelectState(GameState):
             selected_level = self.manager.menu.selected_option + 1
             if self.manager.player.is_level_unlocked(selected_level):
                 self.manager.selected_level = selected_level
+
+                # Actualizar último nivel jugado
+                self.manager.player.last_level_played = selected_level
+                self.manager.player.save()
 
                 # Crear instancia del juego (Fase 5: Sistema Emocional Avanzado)
                 self.manager.current_game = GameCuboFase5(
@@ -210,7 +237,6 @@ class PlayingState(GameState):
                 # Nivel completado pero sin sistema de espera (fases antiguas)
                 # Detener música del nivel inmediatamente
                 pygame.mixer.music.stop()
-                pygame.time.wait(50)
                 self.manager.change_state("level_select")
                 self.manager.menu.selected_option = 0
                 # Reproducir música del menú
@@ -258,7 +284,6 @@ class TransitionState(GameState):
                     # Nivel completado - volver a selección de niveles
                     # Detener música del nivel inmediatamente
                     pygame.mixer.music.stop()
-                    pygame.time.wait(50)
                     self.manager.change_state("level_select")
                     self.manager.menu.selected_option = 0
                     # Reproducir música del menú
@@ -270,7 +295,6 @@ class TransitionState(GameState):
                 # Solo en Game Over: volver al menú principal
                 # Detener música del nivel inmediatamente
                 pygame.mixer.music.stop()
-                pygame.time.wait(50)
                 self.manager.change_state("main_menu")
                 self.manager.menu.selected_option = 0
                 # Reproducir música del menú
@@ -312,7 +336,6 @@ class LevelTransitionState(GameState):
             self.completed = True
             # Detener música del nivel inmediatamente
             pygame.mixer.music.stop()
-            pygame.time.wait(50)
             self.manager.change_state("level_select")
             self.manager.menu.selected_option = 0
             # Reproducir música del menú
