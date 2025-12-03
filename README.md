@@ -32,6 +32,8 @@
 - ✅ Reducción de ~850 líneas de código en sistemas emocionales
 - ✅ Archivos optimizados: `efectos_emocionales.py`, `ambiente_emocional.py`, `animaciones_emocionales.py`
 - ✅ Corrección de bug: niveles desbloqueados ahora limitados a máximo (3/3)
+- ✅ Eliminadas constantes no utilizadas: `MAX_ATTEMPTS`, sistemas de estrellas, multiplicadores de dificultad
+- ✅ Limpieza de constantes de mecánicas avanzadas no implementadas
 
 ### Sistema de Audio Simplificado
 
@@ -244,7 +246,7 @@ GameManager
 
 ## 👥 Autores
 
-**V.H & R.**  
+**V.H & R.M**  
 Proyecto de Informática Gráfica - 2025
 
 ## 📄 Licencia

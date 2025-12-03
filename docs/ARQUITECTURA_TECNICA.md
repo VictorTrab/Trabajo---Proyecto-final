@@ -161,6 +161,7 @@ class GameCuboFase2:
 
 ```python
 class SistemaPuntuacion:
+    # Valores hardcodeados en __init__
     - puntos_base: 1000
     - bonus_tiempo_max: 500
     - bonus_precision_max: 300
@@ -437,14 +438,13 @@ class ParticleSystem:
 
 ```python
 # Pantalla
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
-FPS = 60
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 700
+FPS = 90
 
 # Juego
 TOTAL_LEVELS = 3
-MAX_ATTEMPTS = 10
-TIME_LIMIT = 120
+TIME_LIMIT = 90  # segundos
 
 # Colores Cyberpunk
 NEON_CYAN = (0, 255, 255)
