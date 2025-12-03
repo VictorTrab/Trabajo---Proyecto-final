@@ -9,36 +9,104 @@ CUBO: Arquitecto del Caos implementa una arquitectura modular basada en el patr�
 ### Máquina de Estados (`core/estados_juego.py`)
 
 ```
-┌─────────────┐
-│ GameManager │
-└──────┬──────┘
-       │
-       ├── MainMenuState
-       ├── LevelSelectState
-       ├── PlayingState
-       ├── TransitionState
-       ├── LevelTransitionState
-       ├── ProfileState
-       ├── AboutState
-       └── SettingsState
+                    ┌─────────────────────────┐
+                    │     GameManager         │
+                    │  (Gestor Principal)     │
+                    └───────────┬─────────────┘
+                                │
+                ┌───────────────┼───────────────┐
+                │               │               │
+        ┌───────▼─────┐  ┌──────▼──────┐  ┌────▼─────┐
+        │ MainMenu    │  │ LevelSelect │  │ Playing  │
+        │  State      │  │   State     │  │  State   │
+        └───────┬─────┘  └──────┬──────┘  └────┬─────┘
+                │               │               │
+        ┌───────┼───────┐       │      ┌────────┼────────┐
+        │       │       │       │      │        │        │
+    ┌───▼───┐┌──▼──┐┌──▼───┐   │  ┌───▼───┐┌───▼────┐┌──▼────┐
+    │Profile││About││Settings│  │  │Victory││GameOver││Pause  │
+    │ State ││State││ State  │  │  │ State ││ State  ││Dialog │
+    └───────┘└─────┘└────────┘  │  └───────┘└────────┘└───────┘
+                                 │
+                        ┌────────▼────────┐
+                        │  Transition     │
+                        │     State       │
+                        └─────────────────┘
 ```
 
 **Estados Principales:**
 
-1. **MainMenuState**: Menú principal con opciones
-2. **LevelSelectState**: Selección de nivel (1-3)
-3. **PlayingState**: Estado de juego activo
-4. **TransitionState**: Transiciones entre niveles/game over
-5. **LevelTransitionState**: Animación de completitud de nivel
+| Estado               | Descripción                 | Transiciones                            |
+| -------------------- | --------------------------- | --------------------------------------- |
+| **MainMenuState**    | Menú principal con opciones | → LevelSelect, Profile, About, Settings |
+| **LevelSelectState** | Selección de nivel (1-3)    | → Playing, MainMenu                     |
+| **PlayingState**     | Juego activo (Fases 2-5)    | → Victory, GameOver, Pause              |
+| **TransitionState**  | Animaciones de transición   | → LevelSelect, Playing                  |
+| **ProfileState**     | Estadísticas del jugador    | → MainMenu                              |
+| **AboutState**       | Información del juego       | → MainMenu                              |
+| **SettingsState**    | Configuración de audio      | → MainMenu                              |
 
-### Flujo del Juego
+### Diagrama de Flujo Detallado
 
 ```
-Inicio → Main Menu → Level Select → Playing → Transition → Level Select
-                ↓                      ↓
-            Settings               Game Over
-                ↓                      ↓
-              About                 Retry
+    ┌──────────┐
+    │  INICIO  │
+    └────┬─────┘
+         │
+         ▼
+    ┌─────────────────┐
+    │  MAIN MENU      │◄──────────────────┐
+    │  - Jugar        │                   │
+    │  - Perfil       │                   │
+    │  - Acerca de    │                   │
+    │  - Salir        │                   │
+    └─┬───┬───┬───┬───┘                   │
+      │   │   │   │                       │
+      │   │   │   └─────► [SALIR]         │
+      │   │   │                           │
+      │   │   └───► ┌──────────────┐      │
+      │   │         │   ACERCA DE  │      │
+      │   │         │  - Info      │      │
+      │   │         │  - Créditos  │──────┤
+      │   │         └──────────────┘      │
+      │   │                               │
+      │   └─────► ┌──────────────────┐    │
+      │           │     PERFIL       │    │
+      │           │  - Progreso      │    │
+      │           │  - Estadísticas  │────┤
+      │           │  - Reiniciar     │    │
+      │           └──────────────────┘    │
+      │                                   │
+      ▼                                   │
+  ┌───────────────────┐                  │
+  │  LEVEL SELECT     │                  │
+  │  ┌───┐ ┌───┐ ┌───┐│                  │
+  │  │ 1 │ │ 2 │ │ 3 ││                  │
+  │  └───┘ └───┘ └───┘│                  │
+  │  [VOLVER]         │──────────────────┤
+  └─────────┬─────────┘                  │
+            │                            │
+            ▼                            │
+      ┌──────────┐                       │
+      │ PLAYING  │                       │
+      │  Fase 5  │                       │
+      └─┬──┬──┬──┘                       │
+        │  │  │                          │
+   ┌────┘  │  └────┐                     │
+   │       │       │                     │
+   ▼       ▼       ▼                     │
+┌──────┐┌──────┐┌─────────┐              │
+│PAUSE ││GAME  ││ VICTORY │              │
+│      ││OVER  ││         │              │
+│[ESC] │└──┬───┘└────┬────┘              │
+└──┬───┘   │         │                   │
+   │       │         │                   │
+   │   ┌───▼─────────▼───────┐           │
+   │   │   TRANSITION        │           │
+   │   │  - Animación        │           │
+   │   │  - Estadísticas     │           │
+   └───►  - Continuar/Retry  ├───────────┘
+       └─────────────────────┘
 ```
 
 ## 🎮 Sistema de Fases Progresivas
@@ -245,27 +313,48 @@ class SistemaPowerUps:
 
 ## 🎵 Sistema de Audio
 
-### AudioSimple (`entidades/audio_simple.py`)
+### AudioDinamico (`entidades/audio_dinamico.py`)
+
+Sistema de audio unificado enfocado en jugabilidad.
 
 ```python
-class AudioSimple:
+class AudioDinamico:
     Música:
     - "menu": Menú principal
-    - "juego": Durante partida
+    - "nivel1", "nivel2", "nivel3": Música específica por nivel
     - "completado": Nivel completado
     - "game_over": Derrota
+    - "creditos": Pantalla de créditos
 
-    Efectos:
-    - "click": Interacciones
-    - "rotar": Rotar pieza
-    - "colocar": Colocar pieza
-    - "error": Acción inválida
+    Efectos de Jugabilidad:
+    - "click": Click en botones y selecciones de menú
+    - "rotar": Rotar piezas
+    - "colocar": Colocar piezas
+    - "explotar": Explosiones
+    - "colision_borde": Colisiones con bordes
+    - "error": Errores generales
+    - "salir_nivel": Salir del nivel
+    - "iniciar_nivel": Iniciar nivel
 
     Métodos:
     - reproducir_musica(tipo)
+    - reproducir_musica_nivel(nivel_numero)
     - reproducir_efecto(nombre)
-    - cambiar_volumen(volumen)
+    - cambiar_volumen_musica(volumen)
+    - cambiar_volumen_efectos(volumen)
+    - detener_musica()
+    - pausar_musica()
+    - reanudar_musica()
+    - limpiar()
 ```
+
+**Características:**
+
+- Sistema de caché para efectos de sonido (optimización)
+- Validación de archivos antes de reproducir
+- Control independiente de volúmenes (música: 0.5, efectos: 0.7)
+- Manejo robusto de errores (no crashea si falta audio)
+- Sonido de click integrado en todas las selecciones de menú
 
 ## 💾 Sistema de Persistencia
 
@@ -425,8 +514,9 @@ NEON_ORANGE = (255, 140, 0)
 
 ### 3. **Singleton (Audio)**
 
-- Una sola instancia de AudioSimple en GameManager
+- Una sola instancia de AudioDinamico en GameManager
 - Acceso global mediante `self.manager.audio`
+- Sistema unificado sin duplicación de código
 
 ### 4. **Observer (Implícito)**
 
@@ -459,10 +549,18 @@ NEON_ORANGE = (255, 140, 0)
 ### Mensajes del Sistema
 
 ```python
-[AudioSimple] Sistema de audio inicializado
+[AudioDinamico] Sistema de audio inicializado
+[AudioDinamico] Efecto cargado exitosamente: click -> songs/SongClick.mp3
+[AudioDinamico] Reproduciendo efecto: click
 [GeneradorMeteoros] Meteoro generado en (x, y)
 [SistemaPortales] Teletransporte: Portal 1 → Portal 2
 ```
+
+### Validación de Audio
+
+- Verificación automática de existencia de archivos
+- Mensajes de error descriptivos si falta un archivo
+- Sistema robusto que no crashea por archivos faltantes
 
 ## 🚀 Extensibilidad
 

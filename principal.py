@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config.constantes import *
 from config.jugador import Player
 from entidades.sistema_menu import Menu
-from entidades.audio_simple import AudioSimple
+from entidades.audio_dinamico import AudioDinamico
 from core.estados_juego import (
     MainMenuState,
     LevelSelectState,
@@ -39,8 +39,8 @@ class GameManager:
 
         self.menu = Menu(self.screen)
 
-        # Sistema de audio simple (singleton)
-        self.audio = AudioSimple()
+        # Sistema de audio dinámico (singleton)
+        self.audio = AudioDinamico()
 
         self.current_game = None
         self.selected_level = None

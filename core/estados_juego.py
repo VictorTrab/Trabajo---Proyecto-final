@@ -28,6 +28,7 @@ class MainMenuState(GameState):
     def handle_input(self, event):
         result = self.manager.menu.handle_input(event, 5)
         if result == "select":
+            self.manager.audio.reproducir_efecto("click")
             option = self.manager.menu.selected_option
             if option == 0:  # Jugar - ir al último nivel jugado
                 # Obtener el último nivel jugado del jugador (con validación)
@@ -81,6 +82,7 @@ class LevelSelectState(GameState):
     def handle_input(self, event):
         result = self.manager.menu.handle_input(event, TOTAL_LEVELS)
         if result == "select":
+            self.manager.audio.reproducir_efecto("click")
             selected_level = self.manager.menu.selected_option + 1
             if self.manager.player.is_level_unlocked(selected_level):
                 self.manager.selected_level = selected_level
@@ -102,6 +104,7 @@ class LevelSelectState(GameState):
 
                 self.manager.change_state("playing")
         elif result == "back":
+            self.manager.audio.reproducir_efecto("click")
             self.manager.change_state("main_menu")
             self.manager.menu.selected_option = 0
 
@@ -267,6 +270,7 @@ class TransitionState(GameState):
             )
 
             if event.key == pygame.K_RETURN:
+                self.manager.audio.reproducir_efecto("click")
                 if is_game_over:
                     # Reiniciar desde el mismo nivel
                     self.manager.current_game = GameCuboFase5(
@@ -292,6 +296,7 @@ class TransitionState(GameState):
                 self.manager.transition_data = None
 
             elif event.key == pygame.K_ESCAPE and is_game_over:
+                self.manager.audio.reproducir_efecto("click")
                 # Solo en Game Over: volver al menú principal
                 # Detener música del nivel inmediatamente
                 pygame.mixer.music.stop()
@@ -457,6 +462,7 @@ class ProfileState(GameState):
             event, 2
         )  # 2 opciones: Volver y Reiniciar
         if result == "select":
+            self.manager.audio.reproducir_efecto("click")
             option = self.manager.menu.selected_option
             if option == 0:  # Volver
                 self.manager.change_state("main_menu")
@@ -465,6 +471,7 @@ class ProfileState(GameState):
                 self.show_reset_confirmation = True
                 self.reset_option = 1  # Por defecto en "No"
         elif result == "back":
+            self.manager.audio.reproducir_efecto("click")
             self.manager.change_state("main_menu")
             self.manager.menu.selected_option = 0
 
@@ -487,6 +494,7 @@ class AboutState(GameState):
     def handle_input(self, event):
         result = self.manager.menu.handle_input(event, 1)
         if result == "back":
+            self.manager.audio.reproducir_efecto("click")
             # Volver a música del menú
             self.manager.audio.reproducir_musica("menu")
             self.music_started = False

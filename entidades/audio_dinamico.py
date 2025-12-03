@@ -1,17 +1,17 @@
 """
-Sistema de Audio Simple
-Solo maneja música de fondo y efectos básicos
+Sistema de Audio Dinámico
+Gestión de música y efectos de sonido para jugabilidad
 """
 
 import pygame
 from pathlib import Path
 
 
-class AudioSimple:
-    """Clase simple para manejar audio del juego"""
+class AudioDinamico:
+    """Sistema de audio enfocado en jugabilidad"""
 
     def __init__(self):
-        """Inicializa el sistema de audio simple"""
+        """Inicializa el sistema de audio"""
         self.habilitado = True
         self.inicializado = False
 
@@ -22,7 +22,7 @@ class AudioSimple:
         # Estado
         self.musica_actual = None
 
-        # Rutas de música
+        # Rutas de música por contexto
         self.rutas_musica = {
             "menu": "songs/SongMenu.mp3",
             "nivel1": "songs/Nivel1.mp3",
@@ -31,16 +31,19 @@ class AudioSimple:
             "completado": "songs/SongGameStart.mp3",
             "game_over": "songs/SongGameOver.mp3",
             "creditos": "songs/SongCreditos.mp3",
-            "inicio_juego": "songs/SongGameStart.mp3",
         }
 
-        # Rutas de efectos
+        # Rutas de efectos de jugabilidad
         self.rutas_efectos = {
+            # Efectos de piezas
             "click": "songs/SongClick.mp3",
             "rotar": "songs/SongRotarFigura.mp3",
             "colocar": "songs/SongClick.mp3",
+            "explotar": "songs/SongExplocion.mp3",
+            # Efectos de colisión/error
+            "colision_borde": "songs/SongColisionBordeVentana.mp3",
             "error": "songs/SongColisionBordeVentana.mp3",
-            "explosion": "songs/SongExplocion.mp3",
+            # Efectos de navegación
             "salir_nivel": "songs/SongSalirDeNivel.mp3",
             "iniciar_nivel": "songs/SongGameStart.mp3",
         }
@@ -48,7 +51,7 @@ class AudioSimple:
         # Caché de efectos cargados
         self.efectos_cargados = {}
 
-        # Inicializar pygame.mixer
+        # Inicializar
         self._inicializar()
 
     def _inicializar(self):
@@ -59,9 +62,9 @@ class AudioSimple:
 
             pygame.mixer.music.set_volume(self.volumen_musica)
             self.inicializado = True
-            print("[AudioSimple] Sistema de audio inicializado")
+            print("[AudioDinamico] Sistema de audio inicializado")
         except pygame.error as e:
-            print(f"[AudioSimple] Error al inicializar audio: {e}")
+            print(f"[AudioDinamico] Error al inicializar audio: {e}")
             self.habilitado = False
 
     def _verificar_archivo(self, ruta):
@@ -73,12 +76,11 @@ class AudioSimple:
         Reproduce música de fondo
 
         Args:
-            tipo: Tipo de música ("menu", "nivel1", "nivel2", "nivel3", "completado", "game_over")
+            tipo: Tipo de música ("menu", "nivel1", "nivel2", "nivel3", etc.)
         """
         if not self.habilitado or not self.inicializado:
             return
 
-        # Verificar que mixer esté inicializado
         if not pygame.mixer.get_init():
             return
 
@@ -91,19 +93,16 @@ class AudioSimple:
             return
 
         try:
-            # Detener música actual
             if pygame.mixer.music.get_busy():
                 pygame.mixer.music.stop()
 
-            # Cargar y reproducir con validación
             pygame.mixer.music.load(ruta)
-            pygame.mixer.music.play(-1)  # Loop infinito
+            pygame.mixer.music.play(-1)
             pygame.mixer.music.set_volume(self.volumen_musica)
 
             self.musica_actual = tipo
         except pygame.error as e:
-            print(f"[AudioSimple] Error al reproducir música '{tipo}': {e}")
-            print(f"[AudioSimple] El archivo puede estar corrupto: {ruta}")
+            print(f"[AudioDinamico] Error al reproducir música '{tipo}': {e}")
             self.musica_actual = None
 
     def reproducir_efecto(self, nombre):
@@ -111,7 +110,7 @@ class AudioSimple:
         Reproduce un efecto de sonido
 
         Args:
-            nombre: Nombre del efecto ("click", "rotar", "colocar", "error")
+            nombre: Nombre del efecto ("click", "rotar", "explotar", etc.)
         """
         if not self.habilitado or not self.inicializado:
             return
@@ -129,18 +128,17 @@ class AudioSimple:
                 sonido.set_volume(self.volumen_efectos)
                 self.efectos_cargados[nombre] = sonido
             except pygame.error as e:
-                print(f"[AudioSimple] Error al cargar efecto '{nombre}': {e}")
-                print(f"[AudioSimple] El archivo puede estar corrupto: {ruta}")
+                print(f"[AudioDinamico] Error al cargar efecto '{nombre}': {e}")
                 return
 
         try:
             sonido.play()
         except pygame.error as e:
-            print(f"[AudioSimple] Error al reproducir efecto '{nombre}': {e}")
+            print(f"[AudioDinamico] Error al reproducir efecto '{nombre}': {e}")
 
     def reproducir_musica_nivel(self, nivel_numero):
         """
-        Reproduce la música correspondiente a un nivel específico
+        Reproduce música según número de nivel
 
         Args:
             nivel_numero: Número del nivel (1, 2, 3)
@@ -175,3 +173,13 @@ class AudioSimple:
         self.volumen_efectos = max(0.0, min(1.0, volumen))
         for sonido in self.efectos_cargados.values():
             sonido.set_volume(self.volumen_efectos)
+
+    def limpiar(self):
+        """Limpia recursos de audio"""
+        if self.habilitado and self.inicializado:
+            pygame.mixer.music.stop()
+            for sonido in self.efectos_cargados.values():
+                sonido.stop()
+            self.efectos_cargados.clear()
+
+        self.musica_actual = None
