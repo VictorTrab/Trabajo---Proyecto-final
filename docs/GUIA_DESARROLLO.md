@@ -16,7 +16,7 @@ python -m pip install --upgrade pip
 
 ```bash
 # Clonar repositorio
-git clone [URL_DEL_REPO]
+git clone https://github.com/VictorTrab/Trabajo---Proyecto-final.git
 cd "Trabajo - Proyecto final"
 
 # Crear entorno virtual (opcional pero recomendado)
@@ -550,10 +550,10 @@ Thumbs.db
 
 ### Contacto
 
-- GitHub Issues: [Enlace al repositorio]
-- Email: [email del desarrollador]
+- GitHub Issues: https://github.com/VictorTrab/Trabajo---Proyecto-final
+- Email: hugov7334@gmail.com
 
 ---
 
 **Última actualización**: Diciembre 2025
-**Versión del juego**: 1.0 (Sistema Simplificado)
+**Versión del juego**: 3.6 (Sistema Simplificado)

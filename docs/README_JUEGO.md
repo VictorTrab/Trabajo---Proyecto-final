@@ -156,7 +156,7 @@ El progreso se guarda automáticamente en `save_game.json`:
 
 ```bash
 # Clonar repositorio
-git clone [URL_DEL_REPO]
+git clone https://github.com/VictorTrab/Trabajo---Proyecto-final.git
 
 # Instalar dependencias
 pip install -r requirements.txt
@@ -221,5 +221,5 @@ Trabajo - Proyecto final/
 
 Proyecto desarrollado como parte del curso de Programación.
 
-**Versión**: 1.0 (Sistema Simplificado)
+**Versión**: 3.6 (Sistema Simplificado)
 **Fecha**: Diciembre 2025
