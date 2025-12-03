@@ -200,7 +200,7 @@ class PlayingState(GameState):
 
                 self.manager.transition_data = {
                     "level": self.manager.selected_level,
-                    "attempts": self.manager.current_game.attempts_used,
+                    "attempts": self.manager.current_game.intentos_fallidos,
                     "time": 0,
                     "snapshot": self.manager.screen.copy(),
                     "game_over": True,  # Flag especial para indicar Game Over
