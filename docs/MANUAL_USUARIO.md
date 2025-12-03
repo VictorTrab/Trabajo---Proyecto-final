@@ -130,12 +130,12 @@ Los niveles se desbloquean progresivamente. Debes completar el Nivel 1 para acce
 
 ```
 ┌────────────────────────────────────────────┐
-│ Nivel: 1    Tiempo: 01:45    Piezas: 5/8  │ ← Información superior
+│ Nivel: 1    Tiempo: 01:30    Piezas: 5/8  │ ← Información superior
 ├────────────────────────────────────────────┤
 │ Puntos: 1500                               │
-│ Intentos: 3/10        ┌──────────┐        │
-│ Pistas: 2/3           │  FIGURA  │        │ ← Figura objetivo
-│ Vidas: 2/2            │ OBJETIVO │        │
+│ Pistas: 2/3           ┌──────────┐        │
+│ Vidas: 2/2            │  FIGURA  │        │ ← Figura objetivo
+│                       │ OBJETIVO │        │
 │                       └──────────┘        │
 │                                            │
 │         🟦 ← CUBO                          │
@@ -224,9 +224,9 @@ Power-ups aparecen aleatoriamente durante el juego:
 
 | Power-up       | Icono | Efecto                         | Duración    |
 | -------------- | ----- | ------------------------------ | ----------- |
-| **Escudo**     | 🛡️    | Protección contra meteoros     | 10 segundos |
-| **Velocidad**  | ⚡    | Movimiento más rápido          | 8 segundos  |
-| **Magnetismo** | 🧲    | Atracción automática de piezas | 12 segundos |
+| **Escudo**     | 🛡️    | Protección contra meteoros     | 8 segundos  |
+| **Velocidad**  | ⚡    | Movimiento más rápido          | 6 segundos  |
+| **Magnetismo** | 🧲    | Atracción automática de piezas | 10 segundos |
 
 #### 💡 Pistas
 
@@ -289,9 +289,9 @@ TOTAL:                 1525 puntos
    - Estudia la figura objetivo antes de empezar
    - Identifica qué piezas necesitas
 
-2. **⏰ No te Apresures**
+2. **⛰ No te Apresures**
 
-   - Tienes 2 minutos (120 segundos)
+   - Tienes 90 segundos (1.5 minutos)
    - Es mejor ser preciso que rápido
 
 3. **🔄 Usa la Rotación**
@@ -350,13 +350,6 @@ TOTAL:                 1525 puntos
 
 El juego guarda automáticamente al completar cada nivel. No necesitas hacer nada especial.
 
-### ¿Puedo cambiar el volumen?
-
-Sí, en el menú principal hay una opción de configuración donde puedes ajustar:
-
-- Volumen de música
-- Volumen de efectos de sonido
-
 ### ¿Qué pasa si pierdo todas las vidas?
 
 Game Over. Puedes:
@@ -375,10 +368,6 @@ Sí, en la pantalla de **Perfil del Jugador** hay un botón para **Reiniciar Pro
 ### ¿Qué pasa si se agota el tiempo?
 
 Si el cronómetro llega a 0:00, pierdes el nivel automáticamente (Game Over).
-
-### ¿Cuántos intentos fallidos puedo tener?
-
-Máximo **10 intentos fallidos** por nivel. Cada intento fallido ocurre cuando sueltas una pieza en un lugar incorrecto.
 
 ---
 

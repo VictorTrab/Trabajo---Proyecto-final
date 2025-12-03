@@ -23,10 +23,10 @@ CUBO: Arquitecto del Caos implementa una arquitectura modular basada en el patr�
                 │               │               │
         ┌───────┼───────┐       │      ┌────────┼────────┐
         │       │       │       │      │        │        │
-    ┌───▼───┐┌──▼──┐┌──▼───┐   │  ┌───▼───┐┌───▼────┐┌──▼────┐
-    │Profile││About││Settings│  │  │Victory││GameOver││Pause  │
-    │ State ││State││ State  │  │  │ State ││ State  ││Dialog │
-    └───────┘└─────┘└────────┘  │  └───────┘└────────┘└───────┘
+    ┌───▼───┐┌──▼──┐           │  ┌───▼───┐┌───▼────┐┌──▼────┐
+    │Profile││About│           │  │Victory││GameOver││Pause  │
+    │ State ││State│           │  │ State ││ State  ││Dialog │
+    └───────┘└─────┘           │  └───────┘└────────┘└───────┘
                                  │
                         ┌────────▼────────┐
                         │  Transition     │
@@ -36,15 +36,14 @@ CUBO: Arquitecto del Caos implementa una arquitectura modular basada en el patr�
 
 **Estados Principales:**
 
-| Estado               | Descripción                 | Transiciones                            |
-| -------------------- | --------------------------- | --------------------------------------- |
-| **MainMenuState**    | Menú principal con opciones | → LevelSelect, Profile, About, Settings |
-| **LevelSelectState** | Selección de nivel (1-3)    | → Playing, MainMenu                     |
-| **PlayingState**     | Juego activo (Fases 2-5)    | → Victory, GameOver, Pause              |
-| **TransitionState**  | Animaciones de transición   | → LevelSelect, Playing                  |
-| **ProfileState**     | Estadísticas del jugador    | → MainMenu                              |
-| **AboutState**       | Información del juego       | → MainMenu                              |
-| **SettingsState**    | Configuración de audio      | → MainMenu                              |
+| Estado               | Descripción                 | Transiciones                  |
+| -------------------- | --------------------------- | ----------------------------- |
+| **MainMenuState**    | Menú principal con opciones | → LevelSelect, Profile, About |
+| **LevelSelectState** | Selección de nivel (1-3)    | → Playing, MainMenu           |
+| **PlayingState**     | Juego activo (Fases 2-5)    | → Victory, GameOver, Pause    |
+| **TransitionState**  | Animaciones de transición   | → LevelSelect, Playing        |
+| **ProfileState**     | Estadísticas del jugador    | → MainMenu                    |
+| **AboutState**       | Información del juego       | → MainMenu                    |
 
 ### Diagrama de Flujo Detallado
 
@@ -133,7 +132,7 @@ GameCuboFase5 (+ Sistema Emocional)
 - Recolección y colocación de piezas
 - Sistema de magnetismo (atracción automática)
 - Validación de figura objetivo
-- Límite de tiempo (120s) y intentos (10)
+- Límite de tiempo (90s)
 
 **Componentes Clave:**
 
@@ -209,10 +208,9 @@ class SistemaPowerUps:
 **Responsabilidades:**
 
 - Estados emocionales del cubo
-- Sistema de combos
 - Efectos visuales emocionales
-- Narrativa dinámica
-- Ambiente emocional
+- Animaciones emocionales especiales
+- Ambiente emocional reactivo
 
 **Componentes Clave:**
 
@@ -220,8 +218,6 @@ class SistemaPowerUps:
 class GameCuboFase5:
     - efectos_emocionales: Partículas emocionales
     - animador: Animaciones especiales
-    - narrativa: Diálogos contextuales
-    - combo: Sistema de multiplicadores
     - ambiente: Efectos ambientales
 ```
 
@@ -233,9 +229,8 @@ class GameCuboFase5:
 class Cubo:
     - posición (x, y)
     - velocidad
-    - pieza_actual: Pieza sostenida
+    - zonas_atraccion: 4 zonas (arriba, abajo, izquierda, derecha)
     - emocion: Estado emocional
-    - vida: Puntos de vida
 
     Métodos:
     - mover(dx, dy)
@@ -302,9 +297,9 @@ class SistemaPortales:
 ```python
 class PowerUp:
     TIPOS:
-    - ESCUDO: protección temporal
-    - VELOCIDAD: movimiento rápido
-    - TIEMPO: +30 segundos
+    - ESCUDO: protección temporal (8 segundos)
+    - VELOCIDAD: movimiento rápido (6 segundos)
+    - MAGNETISMO: atracción de piezas (10 segundos)
 
 class SistemaPowerUps:
     - spawn aleatorio
@@ -405,7 +400,6 @@ class Menu:
     - draw_level_select()
     - draw_profile()
     - draw_about()
-    - draw_settings()
     - draw_confirmation_dialog()
 
     Efectos:
@@ -540,7 +534,7 @@ NEON_ORANGE = (255, 140, 0)
 
 ### FPS Target
 
-- **Objetivo**: 60 FPS
+- **Objetivo**: 90 FPS
 - **Clock de Pygame**: Control de frame rate
 - **Render condicional**: Solo actualizar cuando sea necesario
 

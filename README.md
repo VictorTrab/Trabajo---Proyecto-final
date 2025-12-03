@@ -17,7 +17,7 @@
 - ⚡ **Sistema Emocional** dinámico que afecta las animaciones
 - 🌀 **Portales** para teletransportación instantánea
 - ☄️ **Meteoros** como obstáculos dinámicos
-- 🎁 **Power-ups** temporales (escudo, tiempo extra, slowmo)
+- 🎁 **Power-ups** temporales (escudo, velocidad, magnetismo)
 - 📊 **Sistema de Puntuación** con bonificaciones y penalizaciones
 - 👤 **Perfil de Jugador** con estadísticas detalladas
 
@@ -206,8 +206,7 @@ GameManager
 ├── PlayingState (Jugando)
 ├── TransitionState (Transición entre niveles)
 ├── ProfileState (Perfil del Jugador)
-├── AboutState (Acerca de)
-└── SettingsState (Configuración)
+└── AboutState (Acerca de)
 ```
 
 ### Sistema de Puntuación
